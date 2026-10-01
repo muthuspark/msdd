@@ -1,0 +1,27 @@
+# Shared SDD workflow
+
+`spec.md` is the source of truth. Each feature lives in `specs/<kebab-case-name>/` and contains `explore.md`, `spec.md`, and generated `task.md`.
+
+When installed by `msdd init`, this workflow is also available at `.msdd/shared-workflow.md`.
+
+Available workflow commands:
+
+- `explore <feature>` — inspect the codebase, analyze implementation options, recommend an approach, and list questions.
+- `spec <feature>` — document confirmed exploration in the detailed `spec.md` and generate `task.md`.
+- `build <feature>` — validate and reconcile the spec, then expose exactly the next unchecked task for implementation.
+
+`init [--force]` remains the setup command for installing the skills and Claude command files; it is not a workflow mode.
+
+Use the project-local CLI:
+
+```sh
+npm run msdd -- explore "Feature name"
+npm run msdd -- spec "Feature name"
+npm run msdd -- build "Feature name"
+```
+
+The spec interview covers the twelve Markdown sections in order. When a requirement is ambiguous or a decision changes scope, architecture, dependencies, or behavior, explain a recommendation and get explicit confirmation before recording it. Record accepted assumptions and constraints in the spec. Do not silently invent important requirements.
+
+Tasks are regenerated from actionable spec sections. Reconciliation preserves checked state only for an unchanged task statement; changed statements receive a new unchecked task. Edit spec first, then run `npm run msdd -- build "Feature name"`.
+
+Build is sequential and continuous for the coding agent: after one user invocation, implement only the task returned by `build`, verify it, mark it `[x]`, and internally run `build` again for the next task. Do not ask the user to rerun build between tasks. When no unchecked tasks remain, the build is complete.

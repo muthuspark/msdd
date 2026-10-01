@@ -1,0 +1,14 @@
+{
+  "name": "msdd",
+  "version": "0.1.1",
+  "private": true,
+  "description": "Node-based specification-driven development workflow",
+  "type": "module",
+  "bin": {
+    "msdd": "bin/msdd.js"
+  },
+  "scripts": {
+    "test": "node --test",
+    "msdd": "node bin/msdd.js"
+  }
+}

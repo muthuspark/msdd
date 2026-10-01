@@ -1,0 +1,202 @@
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+
+export const SECTIONS = [
+  ['Summary', 'What is being built and why?'],
+  ['Problem', 'What problem or opportunity does this feature address?'],
+  ['Goals and Non-Goals', 'What outcomes are in scope, and what is explicitly out of scope?'],
+  ['Users and Scenarios', 'Who uses this and what are the important scenarios?'],
+  ['Requirements', 'What must the system do? Include functional and non-functional requirements.'],
+  ['User/System Flows', 'Describe the primary user and system flows step by step.'],
+  ['Technical Design', 'Describe the proposed architecture, data, interfaces, and dependencies.'],
+  ['Decisions and Constraints', 'Record decisions, assumptions, constraints, and unresolved choices.'],
+  ['Edge Cases and Failure Handling', 'Describe invalid input, failures, recovery, and boundary cases.'],
+  ['Acceptance Criteria', 'What observable conditions prove the feature is complete?'],
+  ['Implementation Plan', 'List the implementation work in dependency order.'],
+  ['Verification and Implementation Notes', 'How will it be tested and what implementation updates should be recorded?']
+];
+
+export const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+const actionableSections = new Set([
+  'Requirements', 'User/System Flows', 'Technical Design', 'Decisions and Constraints',
+  'Edge Cases and Failure Handling', 'Acceptance Criteria', 'Implementation Plan',
+  'Verification and Implementation Notes'
+]);
+
+export function slugify(name) {
+  const slug = name.normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  if (!slug) throw new Error('Feature name must contain at least one letter or number');
+  return slug;
+}
+
+export function featureDir(root, feature) {
+  return path.join(root, 'specs', slugify(feature));
+}
+
+export function renderDesign(name, answers) {
+  const body = SECTIONS.map(([title]) => `## ${title}\n\n${answers[title]?.trim() || '_Not specified yet._'}`).join('\n\n');
+  return `# ${name.trim()}\n\n${body}\n`;
+}
+
+export function renderExploration(name, answers) {
+  return `# Exploration: ${name.trim()}\n\n## Context\n\n${answers.context?.trim() || '_Not specified yet._'}\n\n## Codebase Analysis\n\n${answers.analysis?.trim() || '_Not investigated yet._'}\n\n## Recommendations\n\n${answers.recommendations?.trim() || '_No recommendations yet._'}\n\n## Open Questions\n\n${answers.questions?.trim() || '_No open questions yet._'}\n\n## Decisions Confirmed\n\n${answers.decisions?.trim() || '_No decisions confirmed yet._'}\n`;
+}
+
+export function parseDesign(markdown) {
+  const heading = markdown.match(/^# (.+)$/m)?.[1]?.trim();
+  const sections = new Map();
+  const matches = [...markdown.matchAll(/^## (.+)$/gm)];
+  for (let i = 0; i < matches.length; i += 1) {
+    const title = matches[i][1].trim();
+    const start = matches[i].index + matches[i][0].length;
+    const end = matches[i + 1]?.index ?? markdown.length;
+    sections.set(title, markdown.slice(start, end).trim());
+  }
+  return { heading, sections };
+}
+
+function cleanLine(line) {
+  return line.replace(/^\s*(?:[-*+]\s+|\d+[.)]\s+)/, '').replace(/\s+/g, ' ').trim();
+}
+
+function sentenceTasks(text) {
+  return text.split(/\n+|(?<=[.!?])\s+/).map(cleanLine)
+    .filter((line) => line && !/^_not specified yet\.?_$/i.test(line) && !/^note:\s*$/i.test(line))
+    .filter((line) => !/^none\.?$/i.test(line));
+}
+
+function taskText(section, statement) {
+  const normalized = statement.replace(/^requirement:\s*/i, '').trim();
+  if (/^(implement|add|build|create|define|document|test|verify|handle|support|persist|expose|update|remove|ensure|validate|record|configure|integrate|design)\b/i.test(normalized)) return normalized;
+  const verbs = {
+    'Requirements': 'Implement', 'User/System Flows': 'Implement the flow:', 'Technical Design': 'Implement',
+    'Decisions and Constraints': 'Apply', 'Edge Cases and Failure Handling': 'Handle',
+    'Acceptance Criteria': 'Verify', 'Implementation Plan': 'Complete', 'Verification and Implementation Notes': 'Verify'
+  };
+  return `${verbs[section] || 'Address'} ${normalized.replace(/[.]+$/, '')}`;
+}
+
+export function deriveTasks(designMarkdown) {
+  const { sections } = parseDesign(designMarkdown);
+  const tasks = [];
+  const seen = new Set();
+  for (const [section, text] of sections) {
+    if (!actionableSections.has(section)) continue;
+    for (const statement of sentenceTasks(text)) {
+      const textValue = taskText(section, statement).replace(/\s+/g, ' ').trim();
+      const key = textValue.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      tasks.push({ text: textValue });
+    }
+  }
+  return tasks;
+}
+
+export function parseTasks(markdown) {
+  return [...markdown.matchAll(/^[-*] \[([ xX])\] (T\d+): (.+)$/gm)].map((match) => ({
+    id: match[2], checked: match[1].toLowerCase() === 'x', text: match[3].trim()
+  }));
+}
+
+function nextId(used) {
+  let n = 1;
+  while (used.has(`T${n}`)) n += 1;
+  return `T${n}`;
+}
+
+export function reconcileTasks(designMarkdown, existingMarkdown = '') {
+  const desired = deriveTasks(designMarkdown);
+  const old = parseTasks(existingMarkdown);
+  const oldByText = new Map(old.map((task) => [task.text.toLowerCase().replace(/\s+/g, ' '), task]));
+  const used = new Set(old.map((task) => task.id));
+  const result = desired.map(({ text }) => {
+    const previous = oldByText.get(text.toLowerCase().replace(/\s+/g, ' '));
+    if (previous) return { ...previous, text };
+    const id = nextId(used);
+    used.add(id);
+    return { id, checked: false, text };
+  });
+  return `${result.map((task) => `- [${task.checked ? 'x' : ' '}] ${task.id}: ${task.text}`).join('\n')}\n`;
+}
+
+export function validateDesign(designMarkdown) {
+  const errors = [];
+  const parsed = parseDesign(designMarkdown);
+  if (!parsed.heading) errors.push('Missing level-one feature heading');
+  const expected = SECTIONS.map(([title]) => title);
+  const actual = expected.filter((title) => parsed.sections.has(title));
+  for (const title of expected) if (!parsed.sections.has(title)) errors.push(`Missing section: ${title}`);
+  if (actual.length !== parsed.sections.size) {
+    for (const title of parsed.sections.keys()) if (!expected.includes(title)) errors.push(`Unexpected section: ${title}`);
+  }
+  for (const [title, text] of parsed.sections) if (expected.includes(title) && !text.trim()) errors.push(`Empty section: ${title}`);
+  return errors;
+}
+
+export function validateTasks(designMarkdown, tasksMarkdown) {
+  const errors = [];
+  const tasks = parseTasks(tasksMarkdown);
+  const lines = tasksMarkdown.split('\n').filter((line) => line.trim());
+  if (lines.some((line) => !/^[-*] \[[ xX]\] T\d+: .+$/.test(line))) errors.push('task.md may contain only checkbox task lines');
+  const ids = new Set();
+  for (const task of tasks) if (ids.has(task.id)) errors.push(`Duplicate task ID: ${task.id}`); else ids.add(task.id);
+  const expected = deriveTasks(designMarkdown).map((task) => task.text.toLowerCase().replace(/\s+/g, ' '));
+  const actual = tasks.map((task) => task.text.toLowerCase().replace(/\s+/g, ' '));
+  if (expected.length !== actual.length || expected.some((task, i) => task !== actual[i])) errors.push('task.md is out of date with spec.md; run `msdd build <feature>`');
+  return errors;
+}
+
+export async function writeFeature(root, name, answers) {
+  const dir = featureDir(root, name);
+  try {
+    await fs.access(path.join(dir, 'spec.md'));
+    throw new Error(`Spec already exists: ${path.relative(root, dir)}`);
+  } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  await fs.mkdir(dir, { recursive: true });
+  const design = renderDesign(name, answers);
+  await fs.writeFile(path.join(dir, 'spec.md'), design);
+  await fs.writeFile(path.join(dir, 'task.md'), reconcileTasks(design));
+  return dir;
+}
+
+export async function writeExploration(root, name, answers) {
+  const dir = featureDir(root, name);
+  await fs.mkdir(dir, { recursive: true });
+  const destination = path.join(dir, 'explore.md');
+  await fs.writeFile(destination, renderExploration(name, answers));
+  return destination;
+}
+
+export async function installSkills(root, { force = false } = {}) {
+  const files = [
+    ['shared-workflow.md', '.msdd/shared-workflow.md'],
+    ['skills/codex-sdd/SKILL.md', '.codex/skills/msdd/SKILL.md'],
+    ['skills/claude-sdd/SKILL.md', '.claude/skills/msdd/SKILL.md'],
+    ...['explore', 'spec', 'build'].map((command) => [
+      `skills/claude-sdd/commands/msdd/${command}.md`, `.claude/commands/msdd/${command}.md`
+    ])
+  ];
+  const installed = [];
+  for (const [source, target] of files) {
+    const destination = path.join(root, target);
+    try {
+      await fs.access(destination);
+      if (!force) throw new Error(`Refusing to overwrite ${target}; rerun with --force`);
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+    await fs.mkdir(path.dirname(destination), { recursive: true });
+    let content = await fs.readFile(path.join(PACKAGE_ROOT, source), 'utf8');
+    if (source.endsWith('SKILL.md')) content = content.replaceAll('../../shared-workflow.md', 'the project\'s `.msdd/shared-workflow.md`');
+    await fs.writeFile(destination, content);
+    installed.push(target);
+  }
+  return installed;
+}
+
+export function hash(value) { return crypto.createHash('sha256').update(value).digest('hex'); }
