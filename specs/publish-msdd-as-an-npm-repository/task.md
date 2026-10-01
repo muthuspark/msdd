@@ -1,0 +1,42 @@
+- [x] T1: Implement Set package name to msdd, version to 0.3.1, and make the package public-publishable by removing private
+- [x] T2: Implement Preserve the msdd bin mapping and ESM behavior
+- [x] T3: Add repository https://github.com/muthuspark/msdd plus homepage, bugs, license, keywords, and a supported Node engines declaration.
+- [x] T4: Define an explicit files allowlist containing package.json, README.md, LICENSE, bin/, src/, shared-workflow.md, and the source skills required by init; exclude tests, specs, .msdd, .codex, .claude, and other development artifacts.
+- [x] T5: Update README with npm install, npx, local usage, package contents, validation, and release instructions.
+- [x] T6: Add automated GitHub Actions publishing using npm trusted publishing/OIDC, restricted to the repository's release workflow and public npm access.
+- [x] T7: Add checks for tests, npm pack dry-run/content, and packed-artifact CLI execution before publish.
+- [x] T8: Implement the flow: For consumption: the user runs npm install -g msdd or npx msdd, npm resolves version 0.3.1, the msdd bin launches bin/msdd.js, and commands operate in the target project
+- [x] T9: Implement the flow: For release: a maintainer updates package metadata and changelog/release notes as appropriate, pushes the change and creates the configured GitHub release/tag, GitHub Actions checks out the repository, installs dependencies with npm ci when a lockfile is present or uses the repository's dependency-free setup, runs tests, runs npm pack --dry-run and a packed-package smoke test, authenticates to npm through trusted publishing, and publishes with public access
+- [x] T10: Implement the flow: A failed check must prevent publication and expose actionable logs
+- [x] T11: Implement Use package.json metadata and an explicit files array as the package boundary
+- [x] T12: Implement Keep bin/msdd.js as the executable entry point and include src/ plus the source shared workflow and skills directories consumed by installSkills
+- [x] T13: Add a GitHub Actions workflow under .github/workflows/ that runs on a deliberate release event, uses Node's setup action, enables npm provenance where supported, requests id-token write permission, and publishes with npm publish --access public only after validation.
+- [x] T14: Implement Use npm pack --json or equivalent to inspect the tarball and install the tarball into a temporary directory for a smoke test
+- [x] T15: Implement Do not add runtime dependencies
+- [x] T16: Implement The repository URL is https://github.com/muthuspark/msdd; issue tracking should point to its GitHub issues URL unless repository configuration requires another value
+- [x] T17: Apply Confirmed: use unscoped package name msdd; release version 0.3.1; repository URL https://github.com/muthuspark/msdd; automate publishing
+- [x] T18: Apply Recommended assumptions: use GitHub Actions and npm trusted publishing via OIDC rather than storing a long-lived npm token; trigger publication from GitHub releases or version tags, with the exact trigger documented and protected by repository permissions; publish to the public npm registry; retain the MIT license already present; support a current maintained Node LTS baseline, defaulting to >=18 unless compatibility testing establishes a stricter baseline
+- [x] T19: Apply The package must remain zero-runtime-dependency and the existing CLI behavior must remain compatible
+- [x] T20: Handle Fail before publish if package metadata is invalid, tests fail, the packed artifact is missing bin/msdd.js or required init assets, forbidden files appear in the tarball, the package name/version is already published, npm authentication or OIDC is unavailable, or the workflow is running from an unapproved branch/event
+- [x] T21: Ensure npm publish is the final step so validation failures cannot create a release.
+- [x] T22: Document that npm versions are immutable and that a failed or incorrect release requires a new patch version.
+- [x] T23: Ensure the smoke test runs from outside the repository so accidental source-relative access is detected.
+- [x] T24: Verify package.json identifies a public package named msdd at version 0.3.1 with complete repository, homepage, bugs, license, keywords, engines, bin, and files metadata
+- [x] T25: Verify npm pack --dry-run contains the executable, source, README, license, shared workflow, and source skills required by init, and does not contain tests, specs, .msdd, .codex, or .claude artifacts
+- [x] T26: Verify Existing tests pass
+- [x] T27: Verify A packed tarball can be installed in a clean temporary project and its msdd executable can run at least --version and init successfully
+- [x] T28: Verify README documents global, npx, and local usage
+- [x] T29: Verify A GitHub Actions workflow validates before publishing and is configured for npm trusted publishing/public access
+- [x] T30: Verify The workflow and package validation are reviewed without requiring a real production publish during implementation
+- [x] T31: Update package.json metadata, version, engines, keywords, repository links, and files allowlist.
+- [x] T32: Add or refine package-content and packed-install smoke tests.
+- [x] T33: Update README with consumer and maintainer instructions.
+- [x] T34: Add the GitHub Actions validation and npm trusted-publishing workflow.
+- [x] T35: Complete Run the full test suite, npm pack dry-run, tarball inspection, and clean-install smoke test
+- [x] T36: Complete Review the final diff and document the one-time npm trusted-publisher configuration needed for the GitHub repository before creating the 0.3.1 release
+- [x] T37: Verify Use npm test as the baseline
+- [x] T38: Verify package contents with npm pack --dry-run --json and assert required and forbidden paths.
+- [x] T39: Build a tarball and install it into a temporary directory outside the repository, then run the packaged msdd --version and init flow.
+- [x] T40: Validate workflow YAML and ensure it uses least-privilege permissions and trusted publishing rather than a committed token.
+- [x] T41: Record test commands, tarball results, and any npm/GitHub configuration still required.
+- [x] T42: Verify Do not run npm publish during implementation unless the user explicitly requests the live release and the npm trusted publisher is configured

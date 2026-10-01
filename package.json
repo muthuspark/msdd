@@ -1,14 +1,42 @@
 {
-  "name": "msdd",
-  "version": "0.1.1",
-  "private": true,
+  "name": "msdd-it",
+  "version": "0.3.1",
   "description": "Node-based specification-driven development workflow",
   "type": "module",
+  "license": "MIT",
+  "homepage": "https://github.com/muthuspark/msdd#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/muthuspark/msdd.git"
+  },
+  "bugs": {
+    "url": "https://github.com/muthuspark/msdd/issues"
+  },
+  "keywords": [
+    "sdd",
+    "specification-driven-development",
+    "developer-tools",
+    "cli",
+    "coding-agents"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "bin/",
+    "src/",
+    "shared-workflow.md",
+    "skills/claude-sdd/",
+    "skills/codex-sdd/"
+  ],
   "bin": {
     "msdd": "bin/msdd.js"
   },
   "scripts": {
     "test": "node --test",
+    "package:check": "node scripts/package-check.js",
     "msdd": "node bin/msdd.js"
   }
 }
