@@ -34,6 +34,14 @@ The shared workflow has three modes:
 2. `/msdd:spec` records confirmed decisions in a twelve-section `spec.md` and generates `task.md`.
 3. `/msdd:build` implements the next unchecked task, verifies it, and continues until the spec is complete.
 
+The generated spec is an engineering document, not a narrative: the interview asks for identifiers, actors, interfaces, failure branches, decisions, executable tasks, and verification evidence. Review an existing spec before building:
+
+```sh
+msdd review "Feature name"
+```
+
+The review fails on unresolved sections and prose-only actionable sections, and warns about missing requirement/acceptance identifiers or verification evidence.
+
 Feature artifacts are stored in `specs/<feature-slug>/`:
 
 ```text

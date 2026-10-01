@@ -18,13 +18,22 @@ export const SECTIONS = [
   ['Verification and Implementation Notes', 'How will it be tested and what implementation updates should be recorded?']
 ];
 
-export const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+export const SECTION_FORMATS = {
+  'Summary': 'State the outcome, scope, and measurable reason for doing this.',
+  'Problem': 'Describe the current behavior, observed failure/opportunity, affected users, and evidence.',
+  'Goals and Non-Goals': 'Use two labeled lists: Goals and Non-goals. Keep each item testable or explicitly bounded.',
+  'Users and Scenarios': 'List actors and numbered scenarios. Include the expected result for each scenario.',
+  'Requirements': 'Use stable IDs such as REQ-001. For each requirement state the behavior, inputs/outputs, and priority.',
+  'User/System Flows': 'Use numbered steps. Name the actor, system action, state change, and failure branch at each relevant step.',
+  'Technical Design': 'Describe components, interfaces, data, dependencies, compatibility, security, and operational concerns.',
+  'Decisions and Constraints': 'Separate Confirmed decisions, Assumptions, Constraints, and Open questions. Do not hide unresolved choices.',
+  'Edge Cases and Failure Handling': 'Use a case/action table or bullets with trigger, expected behavior, recovery, and user-visible error.',
+  'Acceptance Criteria': 'Use stable IDs such as AC-001. Make each criterion observable and state how it will be verified.',
+  'Implementation Plan': 'Use ordered, independently verifiable tasks. Include dependencies and the files or boundaries affected.',
+  'Verification and Implementation Notes': 'List commands/tests, expected evidence, rollout checks, and a place to record deviations.'
+};
 
-const actionableSections = new Set([
-  'Requirements', 'User/System Flows', 'Technical Design', 'Decisions and Constraints',
-  'Edge Cases and Failure Handling', 'Acceptance Criteria', 'Implementation Plan',
-  'Verification and Implementation Notes'
-]);
+export const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 export function slugify(name) {
   const slug = name.normalize('NFKD').replace(/[\u0300-\u036f]/g, '')
@@ -38,7 +47,7 @@ export function featureDir(root, feature) {
 }
 
 export function renderDesign(name, answers) {
-  const body = SECTIONS.map(([title]) => `## ${title}\n\n${answers[title]?.trim() || '_Not specified yet._'}`).join('\n\n');
+  const body = SECTIONS.map(([title]) => `## ${title}\n\n<!-- Format: ${SECTION_FORMATS[title]} -->\n\n${answers[title]?.trim() || '_Not specified yet._'}`).join('\n\n');
   return `# ${name.trim()}\n\n${body}\n`;
 }
 
@@ -54,7 +63,7 @@ export function parseDesign(markdown) {
     const title = matches[i][1].trim();
     const start = matches[i].index + matches[i][0].length;
     const end = matches[i + 1]?.index ?? markdown.length;
-    sections.set(title, markdown.slice(start, end).trim());
+    sections.set(title, markdown.slice(start, end).replace(/<!--[\s\S]*?-->/g, '').trim());
   }
   return { heading, sections };
 }
@@ -64,7 +73,9 @@ function cleanLine(line) {
 }
 
 function sentenceTasks(text) {
-  return text.split(/\n+|(?<=[.!?])\s+/).map(cleanLine)
+  return text.split(/\n+/).flatMap((line) =>
+    /^\s*(?:[-*+]\s+|\d+[.)]\s+)/.test(line) ? [line] : line.split(/(?<=[!?])\s+/))
+    .map(cleanLine)
     .filter((line) => line && !/^_not specified yet\.?_$/i.test(line) && !/^note:\s*$/i.test(line))
     .filter((line) => !/^none\.?$/i.test(line));
 }
@@ -84,8 +95,9 @@ export function deriveTasks(designMarkdown) {
   const { sections } = parseDesign(designMarkdown);
   const tasks = [];
   const seen = new Set();
-  for (const [section, text] of sections) {
-    if (!actionableSections.has(section)) continue;
+  const taskSections = ['Implementation Plan', 'Verification and Implementation Notes'];
+  for (const section of taskSections) {
+    const text = sections.get(section) || '';
     for (const statement of sentenceTasks(text)) {
       const textValue = taskText(section, statement).replace(/\s+/g, ' ').trim();
       const key = textValue.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
@@ -135,7 +147,35 @@ export function validateDesign(designMarkdown) {
     for (const title of parsed.sections.keys()) if (!expected.includes(title)) errors.push(`Unexpected section: ${title}`);
   }
   for (const [title, text] of parsed.sections) if (expected.includes(title) && !text.trim()) errors.push(`Empty section: ${title}`);
+  errors.push(...reviewDesign(designMarkdown).filter((finding) => finding.severity === 'error').map((finding) => finding.message));
   return errors;
+}
+
+export function reviewDesign(designMarkdown) {
+  const findings = [];
+  const parsed = parseDesign(designMarkdown);
+  const placeholder = /^(?:_not specified yet\.?_|tbd|todo|to be decided|n\/a)$/i;
+  for (const [title, text] of parsed.sections) {
+    if (placeholder.test(text.trim())) findings.push({ severity: 'error', section: title, message: `Section is unresolved: ${title}` });
+  }
+  const structuredSections = ['Goals and Non-Goals', 'Users and Scenarios', 'Requirements', 'User/System Flows', 'Edge Cases and Failure Handling', 'Acceptance Criteria', 'Implementation Plan', 'Verification and Implementation Notes'];
+  for (const title of structuredSections) {
+    const text = parsed.sections.get(title) || '';
+    if (text && !/^\s*(?:[-*+] |\d+[.)] |#{3,4} |[A-Z][A-Za-z /-]+:)/m.test(text)) {
+      findings.push({ severity: 'error', section: title, message: `${title} must use bullets, numbered steps, subheadings, or labeled fields; prose-only content is not implementation-ready` });
+    }
+  }
+  const requirements = parsed.sections.get('Requirements') || '';
+  if (requirements && !/\bREQ-\d+\b/i.test(requirements)) findings.push({ severity: 'warning', section: 'Requirements', message: 'Requirements have no stable REQ-* identifiers; traceability will be fragile' });
+  const acceptance = parsed.sections.get('Acceptance Criteria') || '';
+  if (acceptance && !/\bAC-\d+\b/i.test(acceptance)) findings.push({ severity: 'warning', section: 'Acceptance Criteria', message: 'Acceptance criteria have no stable AC-* identifiers' });
+  const decisions = parsed.sections.get('Decisions and Constraints') || '';
+  for (const label of ['Confirmed', 'Assumptions', 'Constraints', 'Open']) {
+    if (!new RegExp(`\\b${label}`, 'i').test(decisions)) findings.push({ severity: 'warning', section: 'Decisions and Constraints', message: `Missing explicit ${label} decisions/constraints subsection` });
+  }
+  if (!(parsed.sections.get('Implementation Plan') || '').match(/(?:^|\n)\s*(?:[-*+] |\d+[.)] )/)) findings.push({ severity: 'error', section: 'Implementation Plan', message: 'Implementation Plan must contain ordered or bulleted executable tasks' });
+  if (!(parsed.sections.get('Verification and Implementation Notes') || '').match(/(?:test|verify|check|command|expected|evidence)/i)) findings.push({ severity: 'warning', section: 'Verification and Implementation Notes', message: 'Verification notes do not identify tests, commands, checks, or expected evidence' });
+  return findings;
 }
 
 export function validateTasks(designMarkdown, tasksMarkdown) {

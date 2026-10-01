@@ -3,10 +3,15 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { deriveTasks, installSkills, reconcileTasks, slugify, validateDesign, validateTasks, renderDesign, renderExploration, writeExploration, writeFeature, SECTIONS } from '../src/core.js';
+import { deriveTasks, installSkills, reconcileTasks, reviewDesign, slugify, validateDesign, validateTasks, renderDesign, renderExploration, writeExploration, writeFeature, SECTIONS } from '../src/core.js';
 import { main } from '../src/cli.js';
 
-const answers = Object.fromEntries(SECTIONS.map(([title]) => [title, `Details for ${title}.`]));
+const answers = Object.fromEntries(SECTIONS.map(([title]) => [title, `- Details for ${title}.`]));
+answers.Requirements = '- REQ-001: The system supports the requested behavior.';
+answers['Acceptance Criteria'] = '- AC-001: The requested behavior is observable and verified by a test.';
+answers['Decisions and Constraints'] = '- Confirmed: use the existing architecture.\n- Assumptions: the current runtime remains supported.\n- Constraints: preserve compatibility.\n- Open questions: none.';
+answers['Implementation Plan'] = '1. Implement the requested behavior.';
+answers['Verification and Implementation Notes'] = '- Test: run the unit test suite and record expected evidence.';
 
 test('slugifies readable feature names safely', () => assert.equal(slugify('OAuth 2.0 / Login'), 'oauth-2-0-login'));
 
@@ -17,17 +22,17 @@ test('renders and validates the twelve-section design', () => {
 });
 
 test('derives deduplicated actionable tasks', () => {
-  const design = renderDesign('Login', { ...answers, Requirements: '- Add sessions\n- Add sessions' });
+  const design = renderDesign('Login', { ...answers, 'Implementation Plan': '- Add sessions\n- Add sessions' });
   const tasks = deriveTasks(design);
   assert.equal(tasks.filter((task) => /sessions/i.test(task.text)).length, 1);
 });
 
 test('reconciliation preserves checked unchanged tasks and resets changed tasks', () => {
-  const first = renderDesign('Login', { ...answers, Requirements: 'Add sessions.' });
+  const first = renderDesign('Login', { ...answers, 'Implementation Plan': '- Add sessions.' });
   const old = reconcileTasks(first).replace('- [ ] T1:', '- [x] T1:');
   const same = reconcileTasks(first, old);
   assert.match(same, /- \[x\] T1:/);
-  const changed = renderDesign('Login', { ...answers, Requirements: 'Add encrypted sessions.' });
+  const changed = renderDesign('Login', { ...answers, 'Implementation Plan': '- Add encrypted sessions.' });
   const next = reconcileTasks(changed, same);
   assert.match(next, /- \[ \] T\d+: Add encrypted sessions\./);
 });
@@ -35,6 +40,13 @@ test('reconciliation preserves checked unchanged tasks and resets changed tasks'
 test('detects stale task files', () => {
   const design = renderDesign('Login', answers);
   assert.ok(validateTasks(design, '- [ ] T1: unrelated\n').some((error) => /out of date/.test(error)));
+});
+
+test('reviews prose-only specs and reports technical gaps', () => {
+  const design = renderDesign('Login', { ...answers, Requirements: 'The system should support sessions.' });
+  const findings = reviewDesign(design);
+  assert.ok(findings.some((finding) => /prose-only/.test(finding.message)));
+  assert.ok(findings.some((finding) => /REQ-/.test(finding.message)));
 });
 
 test('installs both adapters and the shared workflow into a project', async () => {

@@ -3,7 +3,7 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
-import { SECTIONS, featureDir, installSkills, parseTasks, reconcileTasks, validateDesign, writeExploration, writeFeature } from './core.js';
+import { SECTIONS, SECTION_FORMATS, featureDir, installSkills, parseTasks, reconcileTasks, reviewDesign, validateDesign, writeExploration, writeFeature } from './core.js';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
@@ -13,8 +13,8 @@ async function askInterview() {
   const answers = {};
   try {
     for (const [title, prompt] of SECTIONS) {
-      output.write(`\n## ${title}\n${prompt}\n`);
-      answers[title] = await rl.question('Answer (use a concise paragraph or bullets): ');
+      output.write(`\n## ${title}\n${prompt}\nFormat: ${SECTION_FORMATS[title]}\n`);
+      answers[title] = await rl.question('Answer (use the requested labels, bullets, or numbered steps): ');
       if (!answers[title].trim()) answers[title] = '_Not specified yet._';
     }
   } finally { rl.close(); }
@@ -57,7 +57,7 @@ export async function main(args, cwd = process.cwd()) {
     return;
   }
   if (!command || command === 'help' || command === '--help') {
-    console.log('Usage: msdd <init|explore|spec|build> [<feature>] [options]');
+    console.log('Usage: msdd <init|explore|spec|review|build> [<feature>] [options]');
     return;
   }
   if (command === 'init') {
@@ -77,6 +77,14 @@ export async function main(args, cwd = process.cwd()) {
   }
   if (!feature) throw new Error(`${command} requires a feature name`);
   const dir = featureDir(root, feature);
+  if (command === 'review') {
+    const design = await fs.readFile(path.join(dir, 'spec.md'), 'utf8');
+    const findings = reviewDesign(design);
+    if (!findings.length) { console.log('Review passed: no structural or technical completeness gaps found.'); return; }
+    for (const finding of findings) console.log(`${finding.severity.toUpperCase()} [${finding.section}]: ${finding.message}`);
+    if (findings.some((finding) => finding.severity === 'error')) process.exitCode = 1;
+    return;
+  }
   if (command === 'spec') {
     try { await fs.access(path.join(dir, 'explore.md')); } catch { throw new Error(`No exploration found for ${feature}; run \`msdd explore "${feature}"\` first`); }
     const answersPathIndex = options.indexOf('--answers-file');
