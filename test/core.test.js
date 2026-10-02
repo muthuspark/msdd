@@ -59,6 +59,9 @@ test('installs both adapters into a project without a shared workflow file', asy
     '.claude/commands/msdd-explore.md', '.claude/commands/msdd-spec.md', '.claude/commands/msdd-build.md'
   ]);
   assert.match(await fs.readFile(path.join(root, '.codex/skills/msdd-explore/SKILL.md'), 'utf8'), /msdd-explore/);
+  const specSkill = await fs.readFile(path.join(root, '.codex/skills/msdd-spec/SKILL.md'), 'utf8');
+  assert.match(specSkill, /Solution Description/);
+  assert.match(specSkill, /Mermaid/);
   await assert.rejects(() => fs.access(path.join(root, '.msdd/shared-workflow.md')));
   const buildCommand = await fs.readFile(path.join(root, '.claude/commands/msdd-build.md'), 'utf8');
   assert.match(buildCommand, /msdd build/);
@@ -99,4 +102,15 @@ test('exploration can be followed by a detailed spec in the same feature', async
   assert.match(await fs.readFile(path.join(root, 'specs/account-recovery/explore.md'), 'utf8'), /Codebase Analysis/);
   assert.match(await fs.readFile(path.join(root, 'specs/account-recovery/spec.md'), 'utf8'), /Technical Design/);
   assert.match(design, /## Verification and Implementation Notes/);
+});
+
+test('explore creates only explore.md until spec is explicitly invoked', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'msdd-explore-only-'));
+  const answersPath = path.join(root, 'explore-answers.json');
+  await fs.writeFile(answersPath, JSON.stringify({ context: 'Investigate onboarding.' }));
+  await main(['explore', 'Onboarding', '--answers-file', answersPath], root);
+  const featurePath = path.join(root, 'specs/onboarding');
+  await assert.doesNotReject(() => fs.access(path.join(featurePath, 'explore.md')));
+  await assert.rejects(() => fs.access(path.join(featurePath, 'spec.md')));
+  await assert.rejects(() => fs.access(path.join(featurePath, 'task.md')));
 });
