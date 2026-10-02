@@ -10,7 +10,7 @@ Follow the project's `.msdd/shared-workflow.md`. Read the feature's `explore.md`
 Create the specification with:
 
 ```sh
-npm run msdd -- spec "Feature name"
+msdd spec "Feature name"
 ```
 
 The CLI generates `task.md`. The next workflow is `$msdd-buld`.

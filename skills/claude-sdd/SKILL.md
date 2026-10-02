@@ -9,7 +9,7 @@ Follow the project's `.msdd/shared-workflow.md` for the shared lifecycle and Mar
 
 During the interview, surface assumptions, contradictions, missing information, and uncertain technical choices. Give a clear recommendation and pause for explicit confirmation when the choice materially affects scope, architecture, dependencies, or behavior. Store accepted assumptions and constraints in the spec.
 
-Use the repository-local commands `npm run msdd -- explore`, `npm run msdd -- spec`, and `npm run msdd -- build`. Do not introduce a second specification format or manually maintain task semantics.
+Use the installed `msdd` command: `msdd explore`, `msdd spec`, and `msdd build`. Do not introduce a second specification format or manually maintain task semantics.
 
 ## Available commands
 

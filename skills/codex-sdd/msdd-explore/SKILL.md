@@ -10,7 +10,7 @@ Follow the project's `.msdd/shared-workflow.md`. Explore is read-only: inspect t
 Record the exploration with:
 
 ```sh
-npm run msdd -- explore "Feature name"
+msdd explore "Feature name"
 ```
 
 Capture confirmed decisions in `explore.md`. The next workflow is `$msdd-spec`.

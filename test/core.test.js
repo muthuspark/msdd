@@ -59,7 +59,9 @@ test('installs both adapters and the shared workflow into a project', async () =
     '.claude/commands/msdd-explore.md', '.claude/commands/msdd-spec.md', '.claude/commands/msdd-buld.md'
   ]);
   assert.match(await fs.readFile(path.join(root, '.codex/skills/msdd-explore/SKILL.md'), 'utf8'), /msdd-explore/);
-  assert.match(await fs.readFile(path.join(root, '.claude/commands/msdd-buld.md'), 'utf8'), /npm run msdd/);
+  const buildCommand = await fs.readFile(path.join(root, '.claude/commands/msdd-buld.md'), 'utf8');
+  assert.match(buildCommand, /msdd build/);
+  assert.doesNotMatch(buildCommand, /npm run msdd/);
   await assert.rejects(() => installSkills(root), /Refusing to overwrite/);
   await assert.doesNotReject(() => installSkills(root, { force: true }));
 });
