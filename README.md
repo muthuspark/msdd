@@ -4,10 +4,11 @@
 
 ## Install
 
-Install globally and then initialize the claude and codex skill:
+Install or upgrade to the latest published version, then verify the active CLI:
 
 ```sh
-npm install -g msdd-it
+npm install -g msdd-it@latest
+msdd --version
 ```
 
 ## Install for coding agents
@@ -20,9 +21,8 @@ msdd init
 
 This installs:
 
-- Claude: `.claude/skills/msdd/` and the commands `.claude/commands/msdd-explore.md`, `msdd-spec.md`, and `msdd-buld.md`
-- Codex: `.codex/skills/msdd-explore/`, `.codex/skills/msdd-spec/`, and `.codex/skills/msdd-buld/`
-- Shared workflow: `.msdd/shared-workflow.md`
+- Claude: `.claude/skills/msdd/` and the commands `.claude/commands/msdd-explore.md`, `msdd-spec.md`, and `msdd-build.md`
+- Codex: `.codex/skills/msdd-explore/`, `.codex/skills/msdd-spec/`, and `.codex/skills/msdd-build/`
 
 The `--force` option refreshes previously installed adapters. Installation is the only setup step; the workflow is intended to be operated by a coding agent.
 
@@ -32,7 +32,7 @@ The shared workflow has three modes:
 
 1. `/msdd-explore` investigates the codebase and records options and open questions.
 2. `/msdd-spec` records confirmed decisions in a thirteen-section `spec.md` and generates `task.md`.
-3. `/msdd-buld` implements the next unchecked task, verifies it, and continues until the spec is complete.
+3. `/msdd-build` implements the next unchecked task, verifies it, and continues until the spec is complete.
 
 The generated spec is an engineering document, not a narrative: the interview asks for identifiers, actors, interfaces, failure branches, decisions, executable tasks, verification evidence, and an explanation plan. That plan uses a readable controlled-language profile (80% ASD-STE100 by default) and selects the clearest artifact for the audience: prose, a diagram, interactive HTML, or a narrated explainer video. Review an existing spec before building:
 
@@ -52,7 +52,7 @@ task.md     # generated sequential execution view
 
 ## Package contents
 
-The npm package contains the CLI, source modules, license, documentation, shared workflow, and source adapter assets required by `msdd init`. Tests, generated specifications, and local `.msdd`, `.codex`, and `.claude` directories are intentionally excluded.
+The npm package contains the CLI, source modules, license, documentation, and source adapter assets required by `msdd init`. Tests, generated specifications, and local `.codex` and `.claude` directories are intentionally excluded.
 
 ## Development and validation
 
@@ -85,7 +85,7 @@ Use the Claude commands:
 
 - `/msdd-explore <feature>` — inspect the codebase, analyze options, make recommendations, and ask the user the questions that affect the implementation.
 - `/msdd-spec <feature>` — turn the confirmed exploration into `spec.md` and `task.md`. Resolve important open questions before finalizing.
-- `/msdd-buld <feature>` — continuously implement the approved spec. The agent handles one task at a time, runs tests, marks the task `[x]`, and internally continues to the next task until complete or blocked.
+- `/msdd-build <feature>` — continuously implement the approved spec. The agent handles one task at a time, runs tests, marks the task `[x]`, and internally continues to the next task until complete or blocked.
 
 Do not skip exploration, invent unresolved requirements, or ask the user to rerun build between tasks. If implementation changes scope, update the spec before continuing.
 
@@ -95,7 +95,7 @@ Use the installed Codex skills:
 
 1. `$msdd-explore` — investigate the repository and produce analysis, recommendations, trade-offs, and questions.
 2. `$msdd-spec` — document confirmed decisions in the detailed `spec.md` and generate the task list.
-3. `$msdd-buld` — implement tasks sequentially from `spec.md`, verifying and marking each one complete before continuing automatically.
+3. `$msdd-build` — implement tasks sequentially from `spec.md`, verifying and marking each one complete before continuing automatically.
 
 Codex should use the project-local CLI internally as needed, but the user should only need to request the workflow mode. Both agents share the same Markdown contract and task reconciliation behavior.
 

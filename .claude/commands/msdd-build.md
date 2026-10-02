@@ -1,5 +1,5 @@
 ---
-name: "MSDD Buld"
+name: "MSDD Build"
 description: Implement a feature from its approved msdd specification.
 allowed-tools: Bash(msdd:*)
 ---

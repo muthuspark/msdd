@@ -1,11 +1,11 @@
 ---
-name: msdd-buld
+name: msdd-build
 description: Implement an approved MSDD specification continuously, one verified task at a time. Use when the user wants to build the feature defined in spec.md.
 ---
 
-# MSDD Buld
+# MSDD Build
 
-Follow the project's `.msdd/shared-workflow.md`. Start the continuous task loop with:
+Start the continuous task loop with:
 
 ```sh
 msdd build "Feature name"

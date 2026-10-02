@@ -2,8 +2,6 @@
 
 `spec.md` is the source of truth. Each feature lives in `specs/<kebab-case-name>/` and contains `explore.md`, `spec.md`, and generated `task.md`.
 
-When installed by `msdd init`, this workflow is also available at `.msdd/shared-workflow.md`.
-
 Available workflow commands:
 
 - `explore <feature>` — inspect the codebase, analyze implementation options, recommend an approach, and list questions.

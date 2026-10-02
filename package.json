@@ -1,6 +1,6 @@
 {
   "name": "msdd-it",
-  "version": "0.3.6",
+  "version": "0.3.7",
   "description": "Node-based specification-driven development workflow",
   "type": "module",
   "license": "MIT",
