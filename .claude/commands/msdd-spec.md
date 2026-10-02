@@ -1,5 +1,5 @@
 ---
-name: "MSDD: Spec"
+name: "MSDD Spec"
 description: Turn an exploration into a detailed implementation specification.
 allowed-tools: Bash(npm:*)
 ---

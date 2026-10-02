@@ -1,5 +1,5 @@
 ---
-name: "MSDD: Explore"
+name: "MSDD Explore"
 description: Explore the codebase, analyze implementation options, and surface questions before specification.
 allowed-tools: Bash(npm:*), Read, Grep, Glob
 ---

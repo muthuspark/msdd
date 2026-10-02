@@ -219,10 +219,23 @@ export async function installSkills(root, { force = false } = {}) {
     ['shared-workflow.md', '.msdd/shared-workflow.md'],
     ['skills/codex-sdd/SKILL.md', '.codex/skills/msdd/SKILL.md'],
     ['skills/claude-sdd/SKILL.md', '.claude/skills/msdd/SKILL.md'],
-    ...['explore', 'spec', 'build'].map((command) => [
-      `skills/claude-sdd/commands/msdd/${command}.md`, `.claude/commands/msdd/${command}.md`
-    ])
+    ['skills/claude-sdd/commands/msdd-explore.md', '.claude/commands/msdd-explore.md'],
+    ['skills/claude-sdd/commands/msdd-spec.md', '.claude/commands/msdd-spec.md'],
+    ['skills/claude-sdd/commands/msdd-buld.md', '.claude/commands/msdd-buld.md']
   ];
+  const legacyCommands = ['explore', 'spec', 'build'].map((command) =>
+    path.join(root, '.claude', 'commands', 'msdd', `${command}.md`));
+  const existingLegacyCommands = [];
+  for (const legacyCommand of legacyCommands) {
+    try { await fs.access(legacyCommand); existingLegacyCommands.push(legacyCommand); } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  }
+  if (existingLegacyCommands.length && !force) {
+    throw new Error('Legacy MSDD commands found; rerun with --force to replace them with msdd-explore, msdd-spec, and msdd-buld');
+  }
+  if (force) {
+    for (const legacyCommand of existingLegacyCommands) await fs.rm(legacyCommand);
+    try { await fs.rmdir(path.join(root, '.claude', 'commands', 'msdd')); } catch (error) { if (error.code !== 'ENOENT' && error.code !== 'ENOTEMPTY') throw error; }
+  }
   const installed = [];
   for (const [source, target] of files) {
     const destination = path.join(root, target);

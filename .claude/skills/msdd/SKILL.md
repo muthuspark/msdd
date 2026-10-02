@@ -13,6 +13,6 @@ Use the repository-local commands `npm run msdd -- explore`, `npm run msdd -- sp
 
 ## Available commands
 
-- `/msdd:explore <feature>` — inspect the codebase, analyze options, recommend an approach, and list questions.
-- `/msdd:spec <feature>` — document the confirmed exploration as a detailed spec.
-- `/msdd:build <feature>` — continuously implement, verify, and mark every task from the approved spec in sequence.
+- `/msdd-explore <feature>` — inspect the codebase, analyze options, recommend an approach, and list questions.
+- `/msdd-spec <feature>` — document the confirmed exploration as a detailed spec.
+- `/msdd-buld <feature>` — continuously implement, verify, and mark every task from the approved spec in sequence.

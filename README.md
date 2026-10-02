@@ -20,7 +20,7 @@ msdd init
 
 This installs:
 
-- Claude: `.claude/skills/msdd/` and `.claude/commands/msdd/`
+- Claude: `.claude/skills/msdd/` and the commands `.claude/commands/msdd-explore.md`, `msdd-spec.md`, and `msdd-buld.md`
 - Codex: `.codex/skills/msdd/`
 - Shared workflow: `.msdd/shared-workflow.md`
 
@@ -30,9 +30,9 @@ The `--force` option refreshes previously installed adapters. Installation is th
 
 The shared workflow has three modes:
 
-1. `/msdd:explore` investigates the codebase and records options and open questions.
-2. `/msdd:spec` records confirmed decisions in a thirteen-section `spec.md` and generates `task.md`.
-3. `/msdd:build` implements the next unchecked task, verifies it, and continues until the spec is complete.
+1. `/msdd-explore` investigates the codebase and records options and open questions.
+2. `/msdd-spec` records confirmed decisions in a thirteen-section `spec.md` and generates `task.md`.
+3. `/msdd-buld` implements the next unchecked task, verifies it, and continues until the spec is complete.
 
 The generated spec is an engineering document, not a narrative: the interview asks for identifiers, actors, interfaces, failure branches, decisions, executable tasks, verification evidence, and an explanation plan. That plan uses a readable controlled-language profile (80% ASD-STE100 by default) and selects the clearest artifact for the audience: prose, a diagram, interactive HTML, or a narrated explainer video. Review an existing spec before building:
 
@@ -81,11 +81,11 @@ Package versions on npm are immutable. If a release is incorrect, fix the issue 
 
 ## Claude guidelines
 
-Use the namespaced Claude commands:
+Use the Claude commands:
 
-- `/msdd:explore <feature>` — inspect the codebase, analyze options, make recommendations, and ask the user the questions that affect the implementation.
-- `/msdd:spec <feature>` — turn the confirmed exploration into `spec.md` and `task.md`. Resolve important open questions before finalizing.
-- `/msdd:build <feature>` — continuously implement the approved spec. The agent handles one task at a time, runs tests, marks the task `[x]`, and internally continues to the next task until complete or blocked.
+- `/msdd-explore <feature>` — inspect the codebase, analyze options, make recommendations, and ask the user the questions that affect the implementation.
+- `/msdd-spec <feature>` — turn the confirmed exploration into `spec.md` and `task.md`. Resolve important open questions before finalizing.
+- `/msdd-buld <feature>` — continuously implement the approved spec. The agent handles one task at a time, runs tests, marks the task `[x]`, and internally continues to the next task until complete or blocked.
 
 Do not skip exploration, invent unresolved requirements, or ask the user to rerun build between tasks. If implementation changes scope, update the spec before continuing.
 
