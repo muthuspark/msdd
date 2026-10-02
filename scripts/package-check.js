@@ -15,7 +15,8 @@ const run = (command, args, options = {}) => {
 const required = [
   'package/LICENSE', 'package/README.md', 'package/package.json', 'package/bin/msdd.js',
   'package/src/cli.js', 'package/src/core.js', 'package/shared-workflow.md',
-  'package/skills/claude-sdd/SKILL.md', 'package/skills/codex-sdd/SKILL.md'
+  'package/skills/claude-sdd/SKILL.md', 'package/skills/codex-sdd/msdd-explore/SKILL.md',
+  'package/skills/codex-sdd/msdd-spec/SKILL.md', 'package/skills/codex-sdd/msdd-buld/SKILL.md'
 ];
 const forbidden = ['/test/', '/specs/', 'package/.msdd/', 'package/.codex/', 'package/.claude/'];
 const packageJson = JSON.parse(await fs.readFile(path.join(root, 'package.json'), 'utf8'));
@@ -33,7 +34,7 @@ try {
     const version = spawnSync(executable, ['--version'], { cwd: smokeDir, encoding: 'utf8' });
     if (version.status !== 0 || version.stdout.trim() !== packageJson.version) throw new Error(`Packaged CLI returned unexpected version: ${version.stdout}${version.stderr}`);
     run(executable, ['init', '--force'], { cwd: smokeDir });
-    for (const file of ['.msdd/shared-workflow.md', '.codex/skills/msdd/SKILL.md', '.claude/skills/msdd/SKILL.md']) {
+    for (const file of ['.msdd/shared-workflow.md', '.codex/skills/msdd-explore/SKILL.md', '.codex/skills/msdd-spec/SKILL.md', '.codex/skills/msdd-buld/SKILL.md', '.claude/skills/msdd/SKILL.md']) {
       await fs.access(path.join(smokeDir, file));
     }
   } finally {

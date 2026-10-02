@@ -21,7 +21,7 @@ msdd init
 This installs:
 
 - Claude: `.claude/skills/msdd/` and the commands `.claude/commands/msdd-explore.md`, `msdd-spec.md`, and `msdd-buld.md`
-- Codex: `.codex/skills/msdd/`
+- Codex: `.codex/skills/msdd-explore/`, `.codex/skills/msdd-spec/`, and `.codex/skills/msdd-buld/`
 - Shared workflow: `.msdd/shared-workflow.md`
 
 The `--force` option refreshes previously installed adapters. Installation is the only setup step; the workflow is intended to be operated by a coding agent.
@@ -91,11 +91,11 @@ Do not skip exploration, invent unresolved requirements, or ask the user to reru
 
 ## Codex guidelines
 
-Use the installed `msdd` skill and follow the same three modes:
+Use the installed Codex skills:
 
-1. `explore` — investigate the repository and produce analysis, recommendations, trade-offs, and questions.
-2. `spec` — document confirmed decisions in the detailed `spec.md` and generate the task list.
-3. `build` — implement tasks sequentially from `spec.md`, verifying and marking each one complete before continuing automatically.
+1. `$msdd-explore` — investigate the repository and produce analysis, recommendations, trade-offs, and questions.
+2. `$msdd-spec` — document confirmed decisions in the detailed `spec.md` and generate the task list.
+3. `$msdd-buld` — implement tasks sequentially from `spec.md`, verifying and marking each one complete before continuing automatically.
 
 Codex should use the project-local CLI internally as needed, but the user should only need to request the workflow mode. Both agents share the same Markdown contract and task reconciliation behavior.
 

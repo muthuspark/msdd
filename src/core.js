@@ -217,22 +217,31 @@ export async function writeExploration(root, name, answers) {
 export async function installSkills(root, { force = false } = {}) {
   const files = [
     ['shared-workflow.md', '.msdd/shared-workflow.md'],
-    ['skills/codex-sdd/SKILL.md', '.codex/skills/msdd/SKILL.md'],
+    ['skills/codex-sdd/msdd-explore/SKILL.md', '.codex/skills/msdd-explore/SKILL.md'],
+    ['skills/codex-sdd/msdd-spec/SKILL.md', '.codex/skills/msdd-spec/SKILL.md'],
+    ['skills/codex-sdd/msdd-buld/SKILL.md', '.codex/skills/msdd-buld/SKILL.md'],
     ['skills/claude-sdd/SKILL.md', '.claude/skills/msdd/SKILL.md'],
     ['skills/claude-sdd/commands/msdd-explore.md', '.claude/commands/msdd-explore.md'],
     ['skills/claude-sdd/commands/msdd-spec.md', '.claude/commands/msdd-spec.md'],
     ['skills/claude-sdd/commands/msdd-buld.md', '.claude/commands/msdd-buld.md']
   ];
+  const legacyCodexSkill = path.join(root, '.codex', 'skills', 'msdd', 'SKILL.md');
+  let hasLegacyCodexSkill = false;
+  try { await fs.access(legacyCodexSkill); hasLegacyCodexSkill = true; } catch (error) { if (error.code !== 'ENOENT') throw error; }
   const legacyCommands = ['explore', 'spec', 'build'].map((command) =>
     path.join(root, '.claude', 'commands', 'msdd', `${command}.md`));
   const existingLegacyCommands = [];
   for (const legacyCommand of legacyCommands) {
     try { await fs.access(legacyCommand); existingLegacyCommands.push(legacyCommand); } catch (error) { if (error.code !== 'ENOENT') throw error; }
   }
-  if (existingLegacyCommands.length && !force) {
-    throw new Error('Legacy MSDD commands found; rerun with --force to replace them with msdd-explore, msdd-spec, and msdd-buld');
+  if ((hasLegacyCodexSkill || existingLegacyCommands.length) && !force) {
+    throw new Error('Legacy MSDD skill or commands found; rerun with --force to replace them with msdd-explore, msdd-spec, and msdd-buld');
   }
   if (force) {
+    if (hasLegacyCodexSkill) {
+      await fs.rm(legacyCodexSkill);
+      try { await fs.rmdir(path.dirname(legacyCodexSkill)); } catch (error) { if (error.code !== 'ENOENT' && error.code !== 'ENOTEMPTY') throw error; }
+    }
     for (const legacyCommand of existingLegacyCommands) await fs.rm(legacyCommand);
     try { await fs.rmdir(path.join(root, '.claude', 'commands', 'msdd')); } catch (error) { if (error.code !== 'ENOENT' && error.code !== 'ENOTEMPTY') throw error; }
   }

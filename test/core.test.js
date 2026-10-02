@@ -54,13 +54,25 @@ test('installs both adapters and the shared workflow into a project', async () =
   const root = await fs.mkdtemp(path.join(os.tmpdir(), 'msdd-init-'));
   const installed = await installSkills(root);
   assert.deepEqual(installed, [
-    '.msdd/shared-workflow.md', '.codex/skills/msdd/SKILL.md', '.claude/skills/msdd/SKILL.md',
+    '.msdd/shared-workflow.md', '.codex/skills/msdd-explore/SKILL.md', '.codex/skills/msdd-spec/SKILL.md',
+    '.codex/skills/msdd-buld/SKILL.md', '.claude/skills/msdd/SKILL.md',
     '.claude/commands/msdd-explore.md', '.claude/commands/msdd-spec.md', '.claude/commands/msdd-buld.md'
   ]);
-  assert.match(await fs.readFile(path.join(root, '.codex/skills/msdd/SKILL.md'), 'utf8'), /\.msdd\/shared-workflow\.md/);
+  assert.match(await fs.readFile(path.join(root, '.codex/skills/msdd-explore/SKILL.md'), 'utf8'), /msdd-explore/);
   assert.match(await fs.readFile(path.join(root, '.claude/commands/msdd-buld.md'), 'utf8'), /npm run msdd/);
   await assert.rejects(() => installSkills(root), /Refusing to overwrite/);
   await assert.doesNotReject(() => installSkills(root, { force: true }));
+});
+
+test('migrates the legacy Codex MSDD skill when forced', async () => {
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'msdd-codex-migration-'));
+  const legacy = path.join(root, '.codex/skills/msdd/SKILL.md');
+  await fs.mkdir(path.dirname(legacy), { recursive: true });
+  await fs.writeFile(legacy, 'legacy');
+  await assert.rejects(() => installSkills(root), /Legacy MSDD skill or commands/);
+  await installSkills(root, { force: true });
+  await assert.rejects(() => fs.access(legacy));
+  await assert.doesNotReject(() => fs.access(path.join(root, '.codex/skills/msdd-buld/SKILL.md')));
 });
 
 test('accepts init force as the first option after the command', async () => {
