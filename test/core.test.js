@@ -28,6 +28,14 @@ test('derives deduplicated actionable tasks', () => {
   assert.equal(tasks.filter((task) => /sessions/i.test(task.text)).length, 1);
 });
 
+test('does not turn recorded verification evidence into a new task', () => {
+  const design = renderDesign('Login', {
+    ...answers,
+    'Verification and Implementation Notes': '- Test: run the unit test suite.\n- Evidence: unit test suite passed.'
+  });
+  assert.equal(deriveTasks(design).filter((task) => /evidence/i.test(task.text)).length, 0);
+});
+
 test('reconciliation preserves checked unchanged tasks and resets changed tasks', () => {
   const first = renderDesign('Login', { ...answers, 'Implementation Plan': '- Add sessions.' });
   const old = reconcileTasks(first).replace('- [ ] T1:', '- [x] T1:');
@@ -66,6 +74,7 @@ test('installs both adapters into a project without a shared workflow file', asy
   const buildCommand = await fs.readFile(path.join(root, '.claude/commands/msdd-build.md'), 'utf8');
   assert.match(buildCommand, /msdd build/);
   assert.doesNotMatch(buildCommand, /npm run msdd/);
+  assert.match(buildCommand, /living source of truth/);
   await assert.rejects(() => installSkills(root), /Refusing to overwrite/);
   await assert.doesNotReject(() => installSkills(root, { force: true }));
 });

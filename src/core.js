@@ -78,7 +78,7 @@ function sentenceTasks(text) {
   return text.split(/\n+/).flatMap((line) =>
     /^\s*(?:[-*+]\s+|\d+[.)]\s+)/.test(line) ? [line] : line.split(/(?<=[!?])\s+/))
     .map(cleanLine)
-    .filter((line) => line && !/^_not specified yet\.?_$/i.test(line) && !/^note:\s*$/i.test(line))
+    .filter((line) => line && !/^_not specified yet\.?_$/i.test(line) && !/^(?:note|evidence):/i.test(line))
     .filter((line) => !/^none\.?$/i.test(line));
 }
 
