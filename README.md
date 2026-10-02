@@ -31,10 +31,10 @@ The `--force` option refreshes previously installed adapters. Installation is th
 The shared workflow has three modes:
 
 1. `/msdd:explore` investigates the codebase and records options and open questions.
-2. `/msdd:spec` records confirmed decisions in a twelve-section `spec.md` and generates `task.md`.
+2. `/msdd:spec` records confirmed decisions in a thirteen-section `spec.md` and generates `task.md`.
 3. `/msdd:build` implements the next unchecked task, verifies it, and continues until the spec is complete.
 
-The generated spec is an engineering document, not a narrative: the interview asks for identifiers, actors, interfaces, failure branches, decisions, executable tasks, and verification evidence. Review an existing spec before building:
+The generated spec is an engineering document, not a narrative: the interview asks for identifiers, actors, interfaces, failure branches, decisions, executable tasks, verification evidence, and an explanation plan. That plan uses a readable controlled-language profile (80% ASD-STE100 by default) and selects the clearest artifact for the audience: prose, a diagram, interactive HTML, or a narrated explainer video. Review an existing spec before building:
 
 ```sh
 msdd review "Feature name"

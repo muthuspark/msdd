@@ -14,6 +14,7 @@ export const SECTIONS = [
   ['Decisions and Constraints', 'Record decisions, assumptions, constraints, and unresolved choices.'],
   ['Edge Cases and Failure Handling', 'Describe invalid input, failures, recovery, and boundary cases.'],
   ['Acceptance Criteria', 'What observable conditions prove the feature is complete?'],
+  ['Explanation and Output Artifacts', 'How should people understand the result, and which output artifacts should the agent create?'],
   ['Implementation Plan', 'List the implementation work in dependency order.'],
   ['Verification and Implementation Notes', 'How will it be tested and what implementation updates should be recorded?']
 ];
@@ -29,6 +30,7 @@ export const SECTION_FORMATS = {
   'Decisions and Constraints': 'Separate Confirmed decisions, Assumptions, Constraints, and Open questions. Do not hide unresolved choices.',
   'Edge Cases and Failure Handling': 'Use a case/action table or bullets with trigger, expected behavior, recovery, and user-visible error.',
   'Acceptance Criteria': 'Use stable IDs such as AC-001. Make each criterion observable and state how it will be verified.',
+  'Explanation and Output Artifacts': 'Use labeled fields: Audience, Writing profile, Primary artifact, Supporting artifacts, and Accessibility. Prefer an 80% ASD-STE100 controlled-language style for explanatory prose unless strict ASD-STE100 or plain language is required. Choose the clearest medium: prose, diagram, interactive HTML, or narrated explainer video. State the topic, purpose, interaction or narration needs, delivery location, and acceptance evidence for each requested artifact.',
   'Implementation Plan': 'Use ordered, independently verifiable tasks. Include dependencies and the files or boundaries affected.',
   'Verification and Implementation Notes': 'List commands/tests, expected evidence, rollout checks, and a place to record deviations.'
 };
@@ -158,7 +160,7 @@ export function reviewDesign(designMarkdown) {
   for (const [title, text] of parsed.sections) {
     if (placeholder.test(text.trim())) findings.push({ severity: 'error', section: title, message: `Section is unresolved: ${title}` });
   }
-  const structuredSections = ['Goals and Non-Goals', 'Users and Scenarios', 'Requirements', 'User/System Flows', 'Edge Cases and Failure Handling', 'Acceptance Criteria', 'Implementation Plan', 'Verification and Implementation Notes'];
+  const structuredSections = ['Goals and Non-Goals', 'Users and Scenarios', 'Requirements', 'User/System Flows', 'Edge Cases and Failure Handling', 'Acceptance Criteria', 'Explanation and Output Artifacts', 'Implementation Plan', 'Verification and Implementation Notes'];
   for (const title of structuredSections) {
     const text = parsed.sections.get(title) || '';
     if (text && !/^\s*(?:[-*+] |\d+[.)] |#{3,4} |[A-Z][A-Za-z /-]+:)/m.test(text)) {

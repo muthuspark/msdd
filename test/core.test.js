@@ -15,10 +15,11 @@ answers['Verification and Implementation Notes'] = '- Test: run the unit test su
 
 test('slugifies readable feature names safely', () => assert.equal(slugify('OAuth 2.0 / Login'), 'oauth-2-0-login'));
 
-test('renders and validates the twelve-section design', () => {
+test('renders and validates the thirteen-section design including output artifacts', () => {
   const design = renderDesign('Login', answers);
   assert.equal(validateDesign(design).length, 0);
-  assert.equal(design.match(/^## /gm).length, 12);
+  assert.equal(design.match(/^## /gm).length, 13);
+  assert.match(design, /## Explanation and Output Artifacts/);
 });
 
 test('derives deduplicated actionable tasks', () => {

@@ -21,7 +21,7 @@ npm run msdd -- spec "Feature name"
 npm run msdd -- build "Feature name"
 ```
 
-The spec interview covers the twelve Markdown sections in order. When a requirement is ambiguous or a decision changes scope, architecture, dependencies, or behavior, explain a recommendation and get explicit confirmation before recording it. Record accepted assumptions and constraints in the spec. Do not silently invent important requirements.
+The spec interview covers thirteen Markdown sections in order. The `Explanation and Output Artifacts` section records how people should understand the result: use a controlled writing profile (normally an accessible, 80%-ASD-STE100 style) and select the clearest artifact—prose, diagram, interactive HTML, or narrated explainer video. It must state the audience, purpose, delivery location, accessibility needs, and observable acceptance evidence. When a requirement is ambiguous or a decision changes scope, architecture, dependencies, or behavior, explain a recommendation and get explicit confirmation before recording it. Record accepted assumptions and constraints in the spec. Do not silently invent important requirements.
 
 Generated specs should be technical documents: use stable requirement and acceptance IDs, structured bullets or numbered flows, explicit decisions and open questions, executable implementation tasks, and observable verification evidence. Prose-only actionable sections are rejected during review/build.
 
