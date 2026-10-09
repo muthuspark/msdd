@@ -22,15 +22,15 @@ export const SECTIONS = [
 export const SECTION_FORMATS = {
   'Summary': 'State the outcome, scope, and measurable reason for doing this.',
   'Problem': 'Describe the current behavior, observed failure/opportunity, affected users, and evidence.',
-  'Goals and Non-Goals': 'Use two labeled lists: Goals and Non-goals. Keep each item testable or explicitly bounded.',
-  'Users and Scenarios': 'List actors and numbered scenarios. Include the expected result for each scenario.',
+  'Goals and Non-Goals': 'Use `### Goals` and `### Non-goals` headings, each followed by a Markdown bullet list. Keep each item testable or explicitly bounded.',
+  'Users and Scenarios': 'Use `### Actors` followed by a Markdown bullet list, then `### Scenarios` followed by a Markdown numbered list. Include the expected result for each scenario.',
   'Requirements': 'Use stable IDs such as REQ-001. For each requirement state the behavior, inputs/outputs, and priority.',
   'User/System Flows': 'Use numbered steps. Name the actor, system action, state change, and failure branch at each relevant step.',
   'Technical Design': 'Describe components, interfaces, data, dependencies, compatibility, security, and operational concerns.',
-  'Decisions and Constraints': 'Separate Confirmed decisions, Assumptions, Constraints, and Open questions. Do not hide unresolved choices.',
+  'Decisions and Constraints': 'Use `### Confirmed Decisions`, `### Assumptions`, `### Constraints`, and `### Open Questions` headings, each followed by Markdown bullets. Do not hide unresolved choices.',
   'Edge Cases and Failure Handling': 'Use a case/action table or bullets with trigger, expected behavior, recovery, and user-visible error.',
   'Acceptance Criteria': 'Use stable IDs such as AC-001. Make each criterion observable and state how it will be verified.',
-  'Explanation and Output Artifacts': 'Use labeled fields: Audience, Writing profile, Primary artifact, Supporting artifacts, and Accessibility. Prefer an 80% ASD-STE100 controlled-language style for explanatory prose unless strict ASD-STE100 or plain language is required. Choose the clearest medium: prose, diagram, interactive HTML, or narrated explainer video. State the topic, purpose, interaction or narration needs, delivery location, and acceptance evidence for each requested artifact.',
+  'Explanation and Output Artifacts': 'Use a Markdown bullet list with separate `Audience:`, `Writing profile:`, `Primary artifact:`, `Supporting artifacts:`, and `Accessibility:` fields. Prefer an 80% ASD-STE100 controlled-language style for explanatory prose unless strict ASD-STE100 or plain language is required. Choose the clearest medium: prose, diagram, interactive HTML, or narrated explainer video. State the topic, purpose, interaction or narration needs, delivery location, and acceptance evidence for each requested artifact.',
   'Implementation Plan': 'Use ordered, independently verifiable tasks. Include dependencies and the files or boundaries affected.',
   'Verification and Implementation Notes': 'List commands/tests, expected evidence, rollout checks, and a place to record deviations.'
 };
@@ -167,6 +167,18 @@ export function reviewDesign(designMarkdown) {
       findings.push({ severity: 'error', section: title, message: `${title} must use bullets, numbered steps, subheadings, or labeled fields; prose-only content is not implementation-ready` });
     }
   }
+  const requirePattern = (title, pattern, message) => {
+    const text = parsed.sections.get(title) || '';
+    if (text && !pattern.test(text)) findings.push({ severity: 'error', section: title, message });
+  };
+  requirePattern('Goals and Non-Goals', /^### Goals\s*$[\s\S]*?^\s*[-*+]\s+.+$[\s\S]*?^### Non-goals\s*$[\s\S]*?^\s*[-*+]\s+.+$/im,
+    'Goals and Non-Goals must use `### Goals` and `### Non-goals`, each with Markdown bullet items');
+  requirePattern('Users and Scenarios', /^### Actors\s*$[\s\S]*?^\s*[-*+]\s+.+$[\s\S]*?^### Scenarios\s*$[\s\S]*?^\s*\d+[.)]\s+.+$/im,
+    'Users and Scenarios must use `### Actors` with bullets and `### Scenarios` with numbered Markdown items');
+  requirePattern('Decisions and Constraints', /^### Confirmed Decisions\s*$[\s\S]*?^\s*[-*+]\s+.+$[\s\S]*?^### Assumptions\s*$[\s\S]*?^\s*[-*+]\s+.+$[\s\S]*?^### Constraints\s*$[\s\S]*?^\s*[-*+]\s+.+$[\s\S]*?^### Open Questions\s*$[\s\S]*?^\s*[-*+]\s+.+$/im,
+    'Decisions and Constraints must use its four Markdown subsections, each with bullet items');
+  requirePattern('Explanation and Output Artifacts', /^\s*[-*+]\s+Audience:\s+.+$[\s\S]*?^\s*[-*+]\s+Writing profile:\s+.+$[\s\S]*?^\s*[-*+]\s+Primary artifact:\s+.+$[\s\S]*?^\s*[-*+]\s+Supporting artifacts:\s+.+$[\s\S]*?^\s*[-*+]\s+Accessibility:\s+.+$/im,
+    'Explanation and Output Artifacts must provide its five labeled fields as separate Markdown bullets');
   const requirements = parsed.sections.get('Requirements') || '';
   if (requirements && !/\bREQ-\d+\b/i.test(requirements)) findings.push({ severity: 'warning', section: 'Requirements', message: 'Requirements have no stable REQ-* identifiers; traceability will be fragile' });
   const acceptance = parsed.sections.get('Acceptance Criteria') || '';

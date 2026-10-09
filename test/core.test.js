@@ -9,7 +9,10 @@ import { main } from '../src/cli.js';
 const answers = Object.fromEntries(SECTIONS.map(([title]) => [title, `- Details for ${title}.`]));
 answers.Requirements = '- REQ-001: The system supports the requested behavior.';
 answers['Acceptance Criteria'] = '- AC-001: The requested behavior is observable and verified by a test.';
-answers['Decisions and Constraints'] = '- Confirmed: use the existing architecture.\n- Assumptions: the current runtime remains supported.\n- Constraints: preserve compatibility.\n- Open questions: none.';
+answers['Goals and Non-Goals'] = '### Goals\n\n- Support the requested behavior.\n\n### Non-goals\n\n- Change unrelated behavior.';
+answers['Users and Scenarios'] = '### Actors\n\n- User\n\n### Scenarios\n\n1. The user completes the requested action.';
+answers['Decisions and Constraints'] = '### Confirmed Decisions\n\n- Use the existing architecture.\n\n### Assumptions\n\n- The current runtime remains supported.\n\n### Constraints\n\n- Preserve compatibility.\n\n### Open Questions\n\n- None.';
+answers['Explanation and Output Artifacts'] = '- Audience: maintainers.\n- Writing profile: concise technical prose.\n- Primary artifact: this specification.\n- Supporting artifacts: automated tests.\n- Accessibility: use readable Markdown.';
 answers['Implementation Plan'] = '1. Implement the requested behavior.';
 answers['Verification and Implementation Notes'] = '- Test: run the unit test suite and record expected evidence.';
 
@@ -56,6 +59,20 @@ test('reviews prose-only specs and reports technical gaps', () => {
   const findings = reviewDesign(design);
   assert.ok(findings.some((finding) => /prose-only/.test(finding.message)));
   assert.ok(findings.some((finding) => /REQ-/.test(finding.message)));
+});
+
+test('rejects inline prose where sections require Markdown structure', () => {
+  const design = renderDesign('Login', {
+    ...answers,
+    'Goals and Non-Goals': 'Goals: support sessions. Non-goals: change unrelated behavior.',
+    'Users and Scenarios': 'Actors: user. 1. A user signs in.',
+    'Decisions and Constraints': 'Confirmed: sessions. Assumptions: runtime support. Constraints: compatibility. Open questions: none.',
+    'Explanation and Output Artifacts': 'Audience: maintainers. Writing profile: concise. Primary artifact: spec. Supporting artifacts: tests. Accessibility: readable.'
+  });
+  const findings = reviewDesign(design);
+  for (const section of ['Goals and Non-Goals', 'Users and Scenarios', 'Decisions and Constraints', 'Explanation and Output Artifacts']) {
+    assert.ok(findings.some((finding) => finding.severity === 'error' && finding.section === section));
+  }
 });
 
 test('installs both adapters into a project without a shared workflow file', async () => {
