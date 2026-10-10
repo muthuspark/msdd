@@ -22,6 +22,7 @@ export function viewerRoutes(root = sourceRoot) {
   return new Map([
     ['/', path.join(root, 'viewer', 'index.html')],
     ['/app.js', path.join(root, 'viewer', 'app.js')],
+    ['/headings.js', path.join(root, 'viewer', 'headings.js')],
     ['/tree.js', path.join(root, 'viewer', 'tree.js')],
     ['/history.js', path.join(root, 'viewer', 'history.js')],
     ['/styles.css', path.join(root, 'viewer', 'styles.css')],

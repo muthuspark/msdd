@@ -35,6 +35,7 @@ test('allows only known static routes', async () => {
   const homepage = await fetch(`http://127.0.0.1:${port}/`);
   assert.equal(homepage.status, 200);
   assert.match(await homepage.text(), /Choose project folder/);
+  assert.equal((await fetch(`http://127.0.0.1:${port}/headings.js`)).status, 200);
   assert.equal((await fetch(`http://127.0.0.1:${port}/tree.js`)).status, 200);
   await new Promise((resolve) => server.close(resolve));
 });

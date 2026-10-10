@@ -1,0 +1,6 @@
+- [x] T1: Create and test isolated heading metadata and ID helpers in src/viewer/app.js or a focused viewer module; cover empty, duplicate, and punctuation-only text before wiring DOM behavior.
+- [x] T2: Update src/viewer/index.html, src/viewer/app.js, and src/server.js to render and serve the semantic reader header, document container, heading outline, disclosure interactions, focus and scroll behavior, and retained failure paths; depends on task 1.
+- [x] T3: Update src/viewer/styles.css for sticky header, compact outline, heading nesting, mobile presentation, and reduced-motion behavior while preserving existing scrollports; depends on task 2.
+- [x] T4: Add or extend viewer tests for helper output, semantic and ARIA markup, sticky and responsive CSS, and error and heading-free behavior; depends on tasks 1-3.
+- [x] T5: Complete Run npm test, npm run package:check, and responsive or manual reader checks; resolve feature defects; depends on task 4
+- [x] T6: Complete As the final closing phase, update package.json and package-lock.json version as required, rerun release checks, inspect git status and diff, and create one git commit containing all and only the scoped feature, spec, test, and version changes; depends on task 5
