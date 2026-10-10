@@ -4,14 +4,20 @@
   <body>
     <main class="app">
       <section class="landing" id="landing">
-        <h1>MSDD Spec Viewer</h1>
-        <button class="primary" id="choose-folder" type="button">Choose project folder</button>
-        <p>Select a project folder that contains a <code>specs</code> directory.</p>
+        <div class="landing-masthead" aria-hidden="true"><span>MSDD</span><span>Specification reader</span></div>
+        <div class="landing-copy">
+          <p class="eyebrow">A local reading room</p>
+          <h1>Give your specifications the attention they deserve.</h1>
+          <p class="landing-intro">Open a project folder to read its working record, from the first exploration through the final task list.</p>
+          <button class="primary" id="choose-folder" type="button">Open project folder <span aria-hidden="true">→</span></button>
+          <p class="landing-hint">Select a folder that contains a <code>specs</code> directory.</p>
+        </div>
+        <div class="landing-mark" aria-hidden="true"><span>§</span><i></i><small>Read closely</small></div>
         <section class="recent" id="recent-folders" hidden aria-labelledby="recent-heading"><h2 id="recent-heading">Recent folders</h2><div id="recent-list"></div></section>
         <input id="directory-input" type="file" webkitdirectory multiple hidden>
       </section>
       <section class="workspace" id="workspace" hidden>
-        <aside aria-label="Specifications"><h2>Specs</h2><nav id="spec-tree"></nav></aside>
+        <aside aria-label="Specifications"><div class="sidebar-brand"><span class="brand-mark">MSDD</span><span>Working papers</span></div><div class="sidebar-heading"><p class="eyebrow">Project archive</p><h2>Specifications</h2></div><nav id="spec-tree"></nav><p class="sidebar-foot">Local files only</p></aside>
         <article id="reader" aria-label="Document reader"><p class="empty">Choose a specification to read it.</p></article>
       </section>
       <p class="message" id="message" role="status"></p>
