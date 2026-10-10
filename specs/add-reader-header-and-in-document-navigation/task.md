@@ -9,3 +9,5 @@
 - [x] T9: Complete the final closing phase: update package.json and package-lock.json version, rerun release checks, inspect git status and diff, and create one git commit containing all scoped feature, spec, test, version, and audit artifacts; depends on task 8.
 - [x] T10: Remove duplicated rendered document titles and left-align artifact tabs directly below the persistent reader title; update focused reader tests; depends on task 9.
 - [x] T11: Complete the final closing phase for the title-and-tab refinement: update package.json and package-lock.json version, rerun release checks, inspect git status and diff, and create one git commit containing all scoped changes; depends on task 10.
+- [x] T12: Limit the in-document outline to H2 section headings and update focused reader tests; depends on task 11.
+- [x] T13: Complete the final closing phase for the outline refinement: update package.json and package-lock.json version, rerun release checks, inspect git status and diff, and create one git commit containing all scoped changes; depends on task 12.

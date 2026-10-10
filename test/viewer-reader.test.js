@@ -43,7 +43,7 @@ test('keeps reader announcements concise and excludes the document H1 from the o
   assert.doesNotMatch(html, /<main class="app" aria-live=/);
   assert.match(html, /id="reader-status" role="status"/);
   assert.match(source, /const headings = headingEntries\(content\);/);
-  assert.match(source, /const entries = headings\.filter\(\(entry\) => entry\.level > 1\)/);
+  assert.match(source, /const entries = headings\.filter\(\(entry\) => entry\.level === 2\)/);
   assert.match(source, /link\.setAttribute\('aria-current', 'location'\)/);
 });
 

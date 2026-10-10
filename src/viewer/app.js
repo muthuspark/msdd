@@ -39,7 +39,7 @@ function renderReader(file, html, feature) {
   const controller = new AbortController(); outlineController = controller;
   const content = document.createElement('div'); content.className = 'reader-content'; content.innerHTML = html;
   const headings = headingEntries(content);
-  const entries = headings.filter((entry) => entry.level > 1);
+  const entries = headings.filter((entry) => entry.level === 2);
   headings.filter((entry) => entry.level === 1).forEach((entry) => entry.node.remove());
   const header = document.createElement('header'); header.className = 'reader-header';
   const context = document.createElement('div'); context.className = 'reader-context';
