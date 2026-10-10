@@ -1,0 +1,11 @@
+- [x] T1: Update `src/viewer/styles.css` to use a definite `100dvh` workspace height while retaining the full-width shell and its page-level clipping boundary.
+- [x] T2: Update desktop `aside` and `#reader` styles with shrinkable grid-item sizing and independent vertical overflow, without changing the rail, divider, reader measure, or local Markdown overflow rules.
+- [x] T3: Update the existing 700px media rule to use bounded sidebar and reader row tracks so both stacked panes independently scroll within the 100dvh workspace.
+- [x] T4: Add focused stylesheet assertions for shell height, pane scroll behavior, and bounded responsive rows.
+- [x] T15: Update `src/viewer/styles.css` so the existing status message stays visible without extending the application document beyond the 100dvh shell; add a focused assertion and repeat scroll-isolation verification.
+- [x] T5: Complete Run automated tests and manually verify long navigation and document scrolling at desktop and small-screen widths; record evidence and deviations in this specification
+- [x] T6: Verify Run `npm test`; expected result: all existing and new focused tests pass
+- [x] T7: Verify Inspect computed styles at a desktop viewport; expected result: workspace height is 100dvh, both grid items have `min-height:0` and vertical auto overflow, and the browser page does not vertically scroll for long content
+- [x] T8: Verify Inspect at 700px and below; expected result: the workspace uses bounded stacked rows and both panes scroll independently
+- [x] T9: Verify Inspect a long Markdown code block and table; expected result: their local overflow behavior remains usable
+- [x] T10: Record test output, browser-check evidence, and any deviation after implementation.
