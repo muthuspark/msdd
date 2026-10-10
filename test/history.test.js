@@ -1,2 +1,3 @@
-import test from 'node:test'; import assert from 'node:assert/strict'; import { mergeRecent } from '../src/viewer/history.js';
+import test from 'node:test'; import assert from 'node:assert/strict'; import { mergeRecent, mostRecent } from '../src/viewer/history.js';
 test('keeps six recent folders and moves a reused folder first', () => { const old = Array.from({ length: 6 }, (_, index) => ({ name: `folder-${index}` })); const merged = mergeRecent(old, { name: 'folder-3' }); assert.equal(merged.length, 6); assert.equal(merged[0].name, 'folder-3'); });
+test('finds the most-recent saved folder and handles empty history', () => { assert.equal(mostRecent([]), null); assert.equal(mostRecent([{ name: 'old', usedAt: 1 }, { name: 'new', usedAt: 2 }]).name, 'new'); });

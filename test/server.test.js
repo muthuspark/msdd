@@ -34,8 +34,14 @@ test('allows only known static routes', async () => {
   assert.equal(response.status, 404);
   const homepage = await fetch(`http://127.0.0.1:${port}/`);
   assert.equal(homepage.status, 200);
-  assert.match(await homepage.text(), /Choose project folder/);
+  assert.match(await homepage.text(), /Open project folder/);
+  const documentRoute = await fetch(`http://127.0.0.1:${port}/specs/reader/reader%2Fspec.md`);
+  assert.equal(documentRoute.status, 200);
+  assert.match(await documentRoute.text(), /Open project folder/);
+  assert.equal((await fetch(`http://127.0.0.1:${port}/specs/reader/reader%2Fnotes.txt`)).status, 404);
+  assert.equal((await fetch(`http://127.0.0.1:${port}/specs/reader/reader%2Fspec.md`, { method: 'POST' })).status, 404);
   assert.equal((await fetch(`http://127.0.0.1:${port}/headings.js`)).status, 200);
+  assert.equal((await fetch(`http://127.0.0.1:${port}/routes.js`)).status, 200);
   assert.equal((await fetch(`http://127.0.0.1:${port}/tree.js`)).status, 200);
   await new Promise((resolve) => server.close(resolve));
 });

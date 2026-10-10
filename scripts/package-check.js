@@ -16,7 +16,7 @@ const required = [
   'package/LICENSE', 'package/README.md', 'package/package.json', 'package/bin/msdd.js',
   'package/src/cli.js', 'package/src/core.js', 'package/src/server.js',
   'package/src/viewer/index.html', 'package/src/viewer/styles.css', 'package/src/viewer/app.js',
-  'package/src/viewer/headings.js', 'package/src/viewer/history.js', 'package/src/viewer/tree.js',
+  'package/src/viewer/headings.js', 'package/src/viewer/history.js', 'package/src/viewer/routes.js', 'package/src/viewer/tree.js',
   'package/shared-workflow.md',
   'package/skills/claude-sdd/SKILL.md', 'package/skills/codex-sdd/msdd-explore/SKILL.md',
   'package/skills/codex-sdd/msdd-spec/SKILL.md', 'package/skills/codex-sdd/msdd-build/SKILL.md'

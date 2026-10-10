@@ -3,6 +3,7 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { parseRoute } from './viewer/routes.js';
 
 const sourceRoot = path.dirname(fileURLToPath(import.meta.url));
 const contentTypes = new Map([
@@ -25,6 +26,7 @@ export function viewerRoutes(root = sourceRoot) {
     ['/headings.js', path.join(root, 'viewer', 'headings.js')],
     ['/tree.js', path.join(root, 'viewer', 'tree.js')],
     ['/history.js', path.join(root, 'viewer', 'history.js')],
+    ['/routes.js', path.join(root, 'viewer', 'routes.js')],
     ['/styles.css', path.join(root, 'viewer', 'styles.css')],
     ['/vendor/marked.js', path.join(root, '..', 'node_modules', 'marked', 'lib', 'marked.esm.js')],
     ['/vendor/purify.js', path.join(root, '..', 'node_modules', 'dompurify', 'dist', 'purify.es.mjs')],
@@ -39,7 +41,9 @@ export function createStaticServer({ root = sourceRoot } = {}) {
     const mermaidPrefix = '/vendor/mermaid/';
     const requestedMermaid = pathname.startsWith(mermaidPrefix) ? path.resolve(root, '..', 'node_modules', 'mermaid', 'dist', pathname.slice(mermaidPrefix.length)) : null;
     const mermaidRoot = path.resolve(root, '..', 'node_modules', 'mermaid', 'dist');
-    const file = routes.get(pathname) || (requestedMermaid?.startsWith(`${mermaidRoot}${path.sep}`) ? requestedMermaid : null);
+    const file = routes.get(pathname)
+      || (parseRoute(pathname) ? routes.get('/') : null)
+      || (requestedMermaid?.startsWith(`${mermaidRoot}${path.sep}`) ? requestedMermaid : null);
     if (!file || request.method !== 'GET') {
       response.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
       response.end('Not found');

@@ -2,3 +2,13 @@ import test from 'node:test'; import assert from 'node:assert/strict'; import { 
 test('builds sorted nested Markdown tree and prefers spec.md', () => { const files = ['b/task.md','a/explore.md','a/spec.md'].map((relativePath) => ({ relativePath })); const tree = buildTree(files); assert.deepEqual(tree.directories.map((item) => item.name), ['a','b']); assert.equal(defaultFile(files).relativePath, 'a/spec.md'); });
 test('accepts only Markdown under direct specs input directory', () => { const file = (webkitRelativePath) => ({ webkitRelativePath, name: webkitRelativePath.split('/').pop(), text: async () => '' }); assert.equal(filesFromInput([file('root/specs/a.md'), file('root/other/b.md')]).length, 1); });
 test('groups a feature files into one sidebar entry', () => { const files = ['reader/explore.md', 'reader/spec.md', 'reader/task.md', 'other/spec.md'].map((relativePath) => ({ relativePath })); assert.deepEqual(buildFeatures(files).map(({ name, files: items }) => [name, items.map((item) => item.relativePath.split('/').pop())]), [['other', ['spec.md']], ['reader', ['explore.md', 'spec.md', 'task.md']]]); });
+test('sorts features by their earliest artifact date, newest first, with deterministic ties', () => {
+  const files = [
+    { relativePath: 'older/explore.md', lastModified: 100 },
+    { relativePath: 'older/task.md', lastModified: 900 },
+    { relativePath: 'newer/spec.md', lastModified: 200 },
+    { relativePath: 'equal/spec.md', lastModified: 200 },
+    { relativePath: 'unknown/spec.md' }
+  ];
+  assert.deepEqual(buildFeatures(files).map((feature) => feature.path), ['equal', 'newer', 'older', 'unknown']);
+});

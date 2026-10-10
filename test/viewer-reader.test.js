@@ -29,7 +29,7 @@ test('uses feature entries in the sidebar and exposes document artifacts as read
   assert.match(source, /const artifactOrder = \['explore\.md', 'spec\.md', 'task\.md'\]/);
   assert.match(source, /tabs\.className = 'reader-tabs'/);
   assert.match(source, /\{ 'explore\.md': 'Explore', 'spec\.md': 'Spec', 'task\.md': 'Tasks' \}/);
-  assert.match(source, /selectFeature\(feature, button\)/);
+  assert.match(source, /selectFeature\(feature, button, undefined, 'push'\)/);
 });
 
 test('uses a full-width title without a reader path line', async () => {
@@ -58,4 +58,15 @@ test('retains recoverable document and diagram failure paths', async () => {
   assert.match(source, /target\.textContent = 'This Mermaid diagram could not be rendered\.'/);
   assert.match(source, /elements\.reader\.textContent = 'Unable to read this Markdown file\.'/);
   assert.match(source, /outlineController\?\.abort\(\)/);
+});
+
+test('restores deep routes without pushing history and retains recovery context', async () => {
+  const source = await fs.readFile(appUrl, 'utf8');
+  assert.match(source, /readMostRecent\(\)/);
+  assert.match(source, /queryPermission\(\{ mode: 'read' \}\)/);
+  assert.match(source, /window\.addEventListener\('popstate'/);
+  assert.match(source, /history\.pushState\(\{\}, '', routeFor\(feature, file\)\)/);
+  assert.match(source, /Reconnect the project folder to open this specification/);
+  assert.match(source, /navigationVersion/);
+  assert.match(source, /await load\(files, remember \? null : route, remember \? 'push' : 'none'\)/);
 });

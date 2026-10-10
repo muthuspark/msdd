@@ -16,16 +16,22 @@ export function buildFeatures(files) {
     if (!groups.has(path)) groups.set(path, { path, name: parts.at(-2) || parts[0], files: [] });
     groups.get(path).files.push(file);
   }
-  return [...groups.values()].map((group) => ({ ...group, files: group.files.sort((a, b) => a.relativePath.localeCompare(b)) })).sort((a, b) => a.path.localeCompare(b.path));
+  return [...groups.values()].map((group) => {
+    // The browser exposes modification times only. The oldest artifact is our
+    // best available estimate of when the specification folder was started.
+    const dates = group.files.map((file) => file.lastModified).filter((date) => Number.isFinite(date) && date > 0);
+    const startedAt = dates.length ? Math.min(...dates) : 0;
+    return { ...group, startedAt, files: group.files.sort((a, b) => a.relativePath.localeCompare(b)) };
+  }).sort((a, b) => b.startedAt - a.startedAt || a.path.localeCompare(b.path));
 }
 export function defaultFile(files) { return files.find((file) => file.relativePath.split('/').pop() === 'spec.md') || [...files].sort((a, b) => a.relativePath.localeCompare(b))[0]; }
 export async function filesFromDirectory(handle) {
   let specs; for await (const entry of handle.values()) if (entry.kind === 'directory' && entry.name === 'specs') specs = entry;
   if (!specs) throw new Error('The selected folder must contain a direct specs directory.');
-  const files = []; async function walk(directory, prefix = '') { for await (const entry of directory.values()) { const next = `${prefix}${entry.name}`; if (entry.kind === 'directory') await walk(entry, `${next}/`); else if (entry.kind === 'file' && entry.name.endsWith('.md')) { const value = await entry.getFile(); files.push({ relativePath: next, readText: () => value.text() }); } } }
+  const files = []; async function walk(directory, prefix = '') { for await (const entry of directory.values()) { const next = `${prefix}${entry.name}`; if (entry.kind === 'directory') await walk(entry, `${next}/`); else if (entry.kind === 'file' && entry.name.endsWith('.md')) { const value = await entry.getFile(); files.push({ relativePath: next, lastModified: value.lastModified, readText: () => value.text() }); } } }
   await walk(specs); return files;
 }
 export function filesFromInput(files) {
-  const values = [...files].filter((file) => file.webkitRelativePath.split('/').slice(1, 2)[0] === 'specs' && file.name.endsWith('.md')).map((file) => ({ relativePath: file.webkitRelativePath.split('/').slice(2).join('/'), readText: () => file.text() }));
+  const values = [...files].filter((file) => file.webkitRelativePath.split('/').slice(1, 2)[0] === 'specs' && file.name.endsWith('.md')).map((file) => ({ relativePath: file.webkitRelativePath.split('/').slice(2).join('/'), lastModified: file.lastModified, readText: () => file.text() }));
   if (!values.length) throw new Error('The selected folder must contain a direct specs directory with Markdown files.'); return values;
 }

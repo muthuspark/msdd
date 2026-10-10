@@ -1,0 +1,10 @@
+- [x] T1: Create and test `src/viewer/routes.js` pathname helpers for encoding, parsing, validation, and feature/file resolution; no dependencies.
+- [x] T2: Complete Extend `src/viewer/history.js` with tested most-recent-record access for restoration; depends on task 1 only for its consumer contract
+- [x] T3: Update `src/server.js` and tests for validated `/specs/` GET fallback while retaining asset and non-GET 404 restrictions; independent of tasks 1 and 2.
+- [x] T4: Update `src/viewer/app.js` for route-aware selection, startup restoration, reconnect recovery, stale-load protection, and popstate; depends on tasks 1 and 2.
+- [x] T5: Update `src/viewer/index.html`, `src/viewer/styles.css`, and viewer tests for accessible Home and recovery UI; depends on task 4.
+- [x] T6: Add integration coverage for refresh restore, recovery, URL changes, and Back/Forward; depends on tasks 1 through 5.
+- [ ] T7: Complete Run `npm test` and manually validate persisted-folder refresh, Home, and browser history; depends on tasks 3 through 6
+- [ ] T8: Verify Run `npm test`; all existing and new tests must pass
+- [ ] T9: Test normal, nested, encoded, malformed, and unmatched routes; newest and empty history; shell fallback, asset 404, recovery, Home, and popstate.
+- [ ] T10: Verify Manually serve the viewer, select a folder and artifact, refresh its URL, then test Home and browser history. Record browser-specific permission behavior and deviations here before completion
