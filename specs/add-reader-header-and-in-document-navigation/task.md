@@ -7,3 +7,5 @@
 - [x] T7: Update viewer navigation to group sidebar entries by feature folder and render ordered artifact tabs in the reader, with focused tree and reader tests; depends on task 6.
 - [x] T8: Resolve reader audit findings for concise live announcements, clear keyboard focus, usable touch targets, tablet layout, document hierarchy, active outline state, and heading processing; depends on task 7.
 - [x] T9: Complete the final closing phase: update package.json and package-lock.json version, rerun release checks, inspect git status and diff, and create one git commit containing all scoped feature, spec, test, version, and audit artifacts; depends on task 8.
+- [x] T10: Remove duplicated rendered document titles and left-align artifact tabs directly below the persistent reader title; update focused reader tests; depends on task 9.
+- [x] T11: Complete the final closing phase for the title-and-tab refinement: update package.json and package-lock.json version, rerun release checks, inspect git status and diff, and create one git commit containing all scoped changes; depends on task 10.

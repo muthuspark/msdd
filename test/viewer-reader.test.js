@@ -42,8 +42,15 @@ test('keeps reader announcements concise and excludes the document H1 from the o
   const [html, source] = await Promise.all([fs.readFile(indexUrl, 'utf8'), fs.readFile(appUrl, 'utf8')]);
   assert.doesNotMatch(html, /<main class="app" aria-live=/);
   assert.match(html, /id="reader-status" role="status"/);
-  assert.match(source, /headingEntries\(content\)\.filter\(\(entry\) => entry\.level > 1\)/);
+  assert.match(source, /const headings = headingEntries\(content\);/);
+  assert.match(source, /const entries = headings\.filter\(\(entry\) => entry\.level > 1\)/);
   assert.match(source, /link\.setAttribute\('aria-current', 'location'\)/);
+});
+
+test('uses the reader header as the only document title and keeps artifact tabs below it', async () => {
+  const [source, css] = await Promise.all([fs.readFile(appUrl, 'utf8'), fs.readFile(new URL('../src/viewer/styles.css', import.meta.url), 'utf8')]);
+  assert.match(source, /headings\.filter\(\(entry\) => entry\.level === 1\)\.forEach\(\(entry\) => entry\.node\.remove\(\)\)/);
+  assert.match(css, /\.reader-tabs\s*\{[^}]*justify-content:flex-start;/);
 });
 
 test('retains recoverable document and diagram failure paths', async () => {
