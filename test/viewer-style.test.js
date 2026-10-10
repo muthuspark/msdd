@@ -15,7 +15,7 @@ test('creates independent sidebar and reader scrollports within the viewport she
   assert.match(css, /#reader\s*\{[^}]*min-height:0;[^}]*overflow-y:auto;/);
   assert.match(css, /@media \(max-width:700px\)[\s\S]*?\.workspace\s*\{[^}]*grid-template-rows:minmax\(0,2fr\) minmax\(0,3fr\);/);
   assert.match(css, /\.message\s*\{[^}]*position:absolute;[^}]*bottom:0;/);
-  assert.match(css, /#reader ul,#reader ol\s*\{\s*padding-inline-start:22px;/);
+  assert.match(css, /#reader ul,#reader ol\s*\{\s*padding-inline-start:0px;/);
 });
 
 test('keeps reader context sticky, floats a desktop rail, and makes it compact on small screens', async () => {
@@ -36,6 +36,6 @@ test('keeps reader controls usable and collapses the rail before tablet prose be
   const css = await fs.readFile(new URL('../src/viewer/styles.css', import.meta.url), 'utf8');
   assert.match(css, /button:focus-visible\s*\{[^}]*outline:2px solid var\(--crimson\)/);
   assert.match(css, /\.feature-button\s*\{[^}]*min-height:42px/);
-  assert.match(css, /\.outline-list button\s*\{[^}]*min-height:35px/);
+  assert.match(css, /\.outline-list button\s*\{[^}]*width:100%;[^}]*padding:0;/);
   assert.match(css, /@media \(max-width:960px\)[\s\S]*?\.outline-panel\s*\{[^}]*position:fixed/);
 });
