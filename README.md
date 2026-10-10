@@ -75,9 +75,120 @@ npx msdd init
 
 ## Releases
 
-Releases are published automatically by GitHub Actions after the repository’s configured release trigger passes tests and packed-artifact validation. Before the first release, configure an npm trusted publisher for package `msdd-it` using GitHub Actions, repository `muthuspark/msdd`, workflow `.github/workflows/publish.yml`, and the `npm` environment. The workflow requests only `contents: read` and `id-token: write`; no long-lived npm token belongs in the repository.
+Publishing a stable GitHub Release in `muthuspark/msdd` starts
+[the npm publishing workflow](.github/workflows/publish.yml). Pushing a tag alone
+does not start it. Drafts, prereleases, and forks do not publish. The package is
+`msdd-it`; its installed command is `msdd`.
 
-Package versions on npm are immutable. If a release is incorrect, fix the issue and publish a new patch version rather than reusing the same version. Do not run `npm publish` manually unless the automated release process is unavailable and the release has been explicitly reviewed.
+### One-time account setup
+
+A maintainer with access to `msdd-it` must configure these external settings:
+
+1. In GitHub repository Settings → Environments, create or verify the `npm`
+   environment. Ensure its deployment rules permit release tags such as `v0.4.13`.
+   If required reviewers are configured, they must approve the job before it runs.
+2. On npmjs.com, open `msdd-it` → Settings → Trusted publishing and add a GitHub
+   Actions publisher with these exact values:
+
+   | Field | Value |
+   | --- | --- |
+   | Organization or user | `muthuspark` |
+   | Repository | `msdd` |
+   | Workflow filename | `publish.yml` (filename only) |
+   | Environment name | `npm` |
+   | Allowed action | Permit direct publishing with `npm publish` |
+
+3. Complete a successful publish within two days of creating a trust configuration;
+   otherwise, delete the expired connection and create a new one when ready.
+
+The job uses GitHub-hosted Ubuntu, Node 24, and bundled npm. A release check logs
+both versions and requires npm ≥11.5.1. The workflow requests `contents: read` and
+`id-token: write`. Publishing uses OIDC; do not add `NPM_TOKEN` or `NODE_AUTH_TOKEN`
+secrets. Keep the repository public for public-package provenance. See
+[npm trusted publishing](https://docs.npmjs.com/trusted-publishers/) for account
+requirements and trust troubleshooting. Local validation cannot verify these
+account settings or prove that OIDC publishing will succeed.
+
+### Prepare and publish a stable release
+
+Use Node 24 locally to match release CI. First inspect all published versions and
+the current latest tag:
+
+```sh
+npm view msdd-it versions --json
+npm view msdd-it dist-tags --json
+```
+
+Choose an unused stable `X.Y.Z` version newer than the current latest version.
+Package versions are immutable, including versions no longer tagged latest.
+Commit the reviewed source and workflow changes before preparing the release.
+Then run this from a clean checkout of the intended release branch, replacing the
+placeholder with the chosen version:
+
+```sh
+release_version='X.Y.Z'
+npm version "$release_version" --no-git-tag-version
+npm ci
+npm test
+npm run package:check
+git diff -- package.json package-lock.json
+```
+
+Confirm that `package.json`, the top-level `package-lock.json`, and its root
+`packages[""]` entry have identical names and versions. The release check requires
+`msdd-it`, a stable version without prerelease/build suffixes, and an exact
+`v<version>` tag. After reviewing the manifests:
+
+```sh
+git add package.json package-lock.json
+git commit -m "Release v$release_version"
+git tag "v$release_version"
+git push
+git push origin "v$release_version"
+```
+
+In GitHub → Releases → Draft a new release, select that existing tag and publish
+the release. Leave the prerelease option off. The tag must point to the reviewed
+commit containing the updated workflow and manifests; the job checks out that
+release commit.
+
+The workflow validates release metadata and npm compatibility, runs `npm ci`,
+`npm test`, and the packed-artifact CLI smoke check, then runs
+`npm publish --access public --tag latest --provenance`. Same-tag runs cannot
+publish simultaneously. Reruns still fail if the version already exists.
+
+### Verify and recover
+
+Monitor GitHub → Actions → Publish to npm, including any `npm` environment approval.
+After a successful job, verify the exact package version, latest tag, and CLI:
+
+```sh
+npm view "msdd-it@$release_version" version
+npm view msdd-it dist-tags --json
+npx --yes --package="msdd-it@$release_version" msdd --version
+```
+
+The exact version and CLI output must match the release version, and `latest`
+should point to it. Check the package's npm page for provenance.
+
+- **Tag or manifest mismatch:** Correct release preparation and use a tag pointing
+  to the corrected commit. Do not move a published release tag to different code.
+- **Old npm:** Check the logged versions and ensure the tagged workflow uses Node
+  24 with bundled npm ≥11.5.1.
+- **Install, test, or package validation failure:** Publishing stops. Fix the source
+  and prepare a corrected release commit.
+- **OIDC authentication failure (including unexpected E404):** Check npm maintainer
+  access, exact owner/repository/filename/environment fields, direct publish
+  permission, trust expiry, repository URL, and GitHub environment tag restrictions.
+  Repair the trust relationship rather than adding an npm write token.
+- **Duplicate version or uncertain network result:** Read the exact registry version
+  before rerunning. If it exists, verify the prior publish; a rerun cannot overwrite
+  it. For incorrect published content, fix it and choose a new version.
+- **Skipped job:** Verify the release is stable and belongs to `muthuspark/msdd`.
+  Prerelease channels and npm staged publishing are outside this workflow.
+
+Account configuration and creating a live release are maintainer operations;
+repository tests and package checks do not publish anything.
 
 ## Claude guidelines
 

@@ -1,0 +1,4 @@
+- [x] T1: Add scripts/release-check.js and test/release-check.test.js with pure validation, direct execution, clear failures, and isolated test coverage for REQ-003 through REQ-005 and REQ-009.
+- [x] T2: Update .github/workflows/publish.yml to Node 24/v6 actions, stable release/repository guards, disabled caching and checkout credential persistence, same-tag concurrency, the release validator, and ordered public/latest/provenance publishing as defined in REQ-001 through REQ-007.
+- [x] T3: Update README.md Releases with exact npm/GitHub setup, stable release preparation, version/tag alignment, registry checks, trigger semantics, and recovery; distinguish operational prerequisites from automated repository behavior.
+- [x] T4: Verify Node 24 test and package validation results, workflow syntax/order, generated spec/task alignment, and the final scoped diff; record evidence and any tool limitations without publishing.
