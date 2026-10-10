@@ -1,0 +1,8 @@
+- [x] T1: Update `src/viewer/styles.css` to remove outer app padding and make the landing and workspace states at least viewport height.
+- [x] T2: Complete Replace the desktop workspace card geometry with a full-width, edge-to-edge shell while preserving internal paper surfaces, grid tracks, and reader measure
+- [x] T3: Complete Simplify the responsive rule so it only changes the grid and internal spacing required for narrow screens, without restoring outer-card properties
+- [x] T4: Complete Run automated tests and inspect the landing and workspace at wide and narrow viewport sizes; record the result in this specification
+- [x] T5: Verify Run `npm test`; expected result: all existing tests pass
+- [x] T6: Verify Start `msdd serve` and inspect a desktop viewport; expected result: landing and workspace fill the viewport with no outer parchment gutter
+- [x] T7: Verify Resize to 700px or below; expected result: the single-column layout stays full viewport and retains usable reader padding
+- [x] T8: Record any visual deviation, test result, and manual verification evidence after implementation.
