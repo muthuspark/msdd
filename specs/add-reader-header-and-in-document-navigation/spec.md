@@ -20,12 +20,13 @@ The reader currently replaces its document contents with rendered Markdown and g
 
 - Show the active filename and relative path in a header that remains visible while the reader scrolls.
 - Generate an accessible outline from every non-empty H1-H6 heading and scroll the reader to a selected heading.
-- Use one collapsible header control: a compact popover on desktop and a compact mobile drawer/popover.
+- Keep the section guidance visible as a sticky right rail on desktop; use a compact toggle and fixed popover only on narrow screens.
+- Show one sidebar entry per feature folder and place its available Markdown artifacts in reader tabs.
 - Preserve sanitized local Markdown rendering, Mermaid rendering, the sidebar, and independent scrollports.
 
 ### Non-goals
 
-- Add reading progress, URL fragments/history, a persistent third-column rail, remote content, or new dependencies.
+- Add reading progress, URL fragments/history, remote content, or new dependencies.
 
 ## Users and Scenarios
 
@@ -39,8 +40,9 @@ The reader currently replaces its document contents with rendered Markdown and g
 
 1. A developer opens a file; the reader header shows its filename and relative path and remains visible while the document scrolls.
 2. A developer opens the outline; nested heading labels identify available sections and selecting one moves focus and the reader to that section.
-3. A developer uses a narrow screen; the same control exposes the outline without reducing the document to a permanent rail.
+3. A developer on desktop keeps the floating right rail visible while reading; on a narrow screen the compact control exposes the outline without permanently reducing the document width.
 4. A file has no non-empty headings; the reader stays usable and does not offer an empty outline.
+5. A developer selects a feature in the sidebar; the viewer opens its preferred spec document and exposes Explore, Spec, and Tasks tabs when those files exist.
 
 ## Requirements
 
@@ -50,20 +52,22 @@ The reader currently replaces its document contents with rendered Markdown and g
 - REQ-002 (high): Keep the header sticky within #reader without restoring document-level scrolling or changing sidebar behavior.
 - REQ-003 (high): From sanitized rendered content, collect non-empty H1-H6 in document order, create deterministic collision-free heading IDs, and expose their text and level in an outline.
 - REQ-004 (high): The outline toggle shall be keyboard operable, identify its expanded state and controlled content, close with Escape, and move reader focus and scroll to the selected heading with motion respecting user preferences.
-- REQ-005 (medium): Use responsive CSS to make the same outline UI compact on narrow screens; hide or disable it when no headings exist.
+- REQ-005 (medium): Present the outline as a sticky right rail on desktop and a compact mobile popover on narrow screens; hide or disable it when no headings exist.
 - REQ-006 (high): Preserve render failure recovery, sanitized Markdown, Mermaid behavior, local-only operation, and no new runtime dependency.
 - REQ-007 (medium): Update the package version before release verification and commit all scoped changes in one final commit.
+- REQ-008 (high): Group local Markdown files by feature folder for sidebar navigation. Selecting a group shall open its preferred document and render tabs for its available artifacts, ordered Explore, Spec, Tasks, then other files alphabetically.
 
 ## User/System Flows
 
 <!-- Format: Use numbered steps. Name the actor, system action, state change, and failure branch at each relevant step. -->
 
-1. Developer selects a Markdown leaf; the system marks the tree item current and reads its local text.
+1. Developer selects a feature folder; the system marks one sidebar entry current and selects that feature’s `spec.md` when it exists, otherwise its first Markdown file.
 2. System parses and sanitizes Markdown, creates the reader header and document container, then inserts the safe rendered content.
 3. System collects valid headings, assigns IDs, and renders the outline; if none exist, it hides the outline control.
 4. Developer opens the control; the system sets its expanded state and presents the responsive outline.
-5. Developer chooses an entry; the system closes the control, scrolls the #reader scrollport to the target, and focuses the heading.
-6. Mermaid rendering completes or displays its existing per-block fallback; if file rendering fails, the system replaces reader content with the existing recoverable error.
+5. Developer selects a document tab; the system replaces the reader content while retaining the active feature context and regenerates the outline.
+6. Developer chooses an outline entry; the system closes the mobile control when applicable, scrolls the #reader scrollport to the target, and focuses the heading.
+7. Mermaid rendering completes or displays its existing per-block fallback; if file rendering fails, the system replaces reader content with the existing recoverable error.
 
 ## Technical Design
 
@@ -71,7 +75,7 @@ The reader currently replaces its document contents with rendered Markdown and g
 
 ### Solution Description
 
-Extend the client-only selection render path. It will build a stable reader shell, then derive navigable heading metadata from the sanitized document DOM. The sticky header owns the single outline control; its chosen item controls the existing #reader scrollport.
+Extend the client-only selection render path. It builds a stable reader shell, then derives navigable heading metadata from the sanitized document DOM. On desktop, the reader layout keeps the outline in a sticky right rail. On narrow screens, the header owns the compact outline control. A chosen item controls the existing #reader scrollport.
 
 ### Current State
 
@@ -79,12 +83,12 @@ Extend the client-only selection render path. It will build a stable reader shel
 
 ### Proposed Design
 
-Keep #reader as the scroll container. Add header, outline panel, and document-content elements per successful selection. Build IDs and outline after safe HTML insertion, before Mermaid replacement. Recreate all reader-owned elements on every selection. Preserve a unique safe pre-existing heading ID; otherwise derive a collision-free ID from the displayed heading label.
+Keep #reader as the scroll container. Add header, document-content, and outline-panel elements per successful selection. Build IDs and outline after safe HTML insertion, before Mermaid replacement. A desktop grid places the content beside a sticky rail. At the existing narrow breakpoint, the grid becomes one column and the panel becomes a compact fixed popover controlled by the header. Recreate all reader-owned elements on every selection. Preserve a unique safe pre-existing heading ID; otherwise derive a collision-free ID from the displayed heading label.
 
 ### Architecture / Components
 
 - index.html supplies stable reader landmarks and initial empty content.
-- app.js adds pure heading and slug metadata helpers, reader-shell rendering, disclosure and focus handlers, and selection orchestration.
+- tree.js groups files into feature-folder entries; app.js renders feature navigation, artifact tabs, reader shell, disclosure and focus handlers, and selection orchestration.
 - server.js adds the viewer route for the new browser module.
 - styles.css provides sticky-header, outline, heading nesting, desktop popover, and mobile compact styles.
 
@@ -105,13 +109,17 @@ sequenceDiagram
 
 None. Ephemeral heading objects contain id, text, and level. No URL, persistence, server route, or dependency changes.
 
+Feature navigation groups contain a feature `path`, display `name`, and its sorted local files. They exist only in the browser session.
+
 ### Technical Decisions
 
-Use filename plus relative path, all non-empty H1-H6 headings, deterministic unique IDs, and no URL fragments. Use native buttons and ARIA with Escape close and focus restoration. Respect reduced motion.
+Use filename plus relative path, all non-empty H1-H6 headings, deterministic unique IDs, and no URL fragments. Use a sticky desktop rail for persistent orientation, with native buttons and ARIA disclosure, Escape close, and focus restoration only when the mobile popover is active. Respect reduced motion.
+
+Use feature folders, not individual Markdown files, as the sidebar’s navigation unit. Prefer `spec.md` for the initial tab and preserve a stable Explore, Spec, Tasks tab order.
 
 ### Trade-offs
 
-A header popover keeps the reader measure and avoids another grid column but exposes less outline content than a persistent rail. Fresh DOM per selection keeps state simple but does not retain open outline state across files.
+A persistent rail improves scanning and matches the established reading pattern, but takes a bounded right column on wide screens. The mobile layout deliberately keeps the document full-width and uses a compact popover. Fresh DOM per selection keeps state simple but does not retain open mobile-popover state across files.
 
 ### Failure Handling
 
@@ -127,7 +135,8 @@ Unit-test heading metadata and unique IDs where extracted. Add source or DOM ass
 
 ### Confirmed Decisions
 
-- Use a header-controlled outline popover or drawer, filename title plus relative path, all non-empty H1-H6 headings, no progress, and no URL fragments.
+- Use a floating sticky right rail on desktop, a header-controlled mobile popover, filename title plus relative path, all non-empty H1-H6 headings, no progress, and no URL fragments.
+- Use a single sidebar button per feature folder and reader-local artifact tabs.
 - Update version and commit all changes as the final closing phase.
 
 ### Assumptions
@@ -137,7 +146,7 @@ Unit-test heading metadata and unique IDs where extracted. Add source or DOM ass
 ### Constraints
 
 - Keep static localhost serving, offline bundled dependencies, sanitized Markdown, existing Mermaid behavior, 100dvh shell, and independent panes.
-- Do not add dependencies or a persistent right rail.
+- Do not add dependencies; keep the desktop rail bounded and switch it off structurally at the existing narrow breakpoint.
 
 ### Open Questions
 
@@ -162,9 +171,10 @@ Unit-test heading metadata and unique IDs where extracted. Add source or DOM ass
 - AC-001: Selecting any Markdown file shows its basename and relative path in a sticky reader header; verify with DOM behavior and CSS tests.
 - AC-002: A document with multiple headings produces an ordered, level-indented outline; every entry targets one unique heading ID; verify with helper or DOM tests.
 - AC-003: Keyboard users can open the outline, select an item, reach the target, and close it with Escape; verify with focused interaction tests or documented manual check.
-- AC-004: The outline is compact at the mobile breakpoint and does not create a desktop permanent rail; verify stylesheet assertions and responsive manual check.
+- AC-004: The outline is a sticky right rail on desktop and a compact fixed popover at the mobile breakpoint; verify stylesheet assertions and responsive manual check.
 - AC-005: A heading-free document, duplicate heading text, render failure, and Mermaid failure preserve usable reader fallback behavior; verify automated cases where practical.
 - AC-006: npm test and npm run package:check pass after the version update; the final git commit includes all intended scoped changes and no unrelated files.
+- AC-007: A feature with `explore.md`, `spec.md`, and `task.md` appears once in the sidebar; selecting it opens Spec first and displays each existing artifact as a tab; verify helper and reader tests.
 
 ## Explanation and Output Artifacts
 
@@ -186,6 +196,8 @@ Unit-test heading metadata and unique IDs where extracted. Add source or DOM ass
 4. Add or extend viewer tests for helper output, semantic and ARIA markup, sticky and responsive CSS, and error and heading-free behavior; depends on tasks 1-3.
 5. Run npm test, npm run package:check, and responsive or manual reader checks; resolve feature defects; depends on task 4.
 6. As the final closing phase, update package.json and package-lock.json version as required, rerun release checks, inspect git status and diff, and create one git commit containing all and only the scoped feature, spec, test, and version changes; depends on task 5.
+7. Replace the desktop outline popover with a sticky right rail while retaining the compact mobile disclosure, and update focused reader/style tests; depends on task 6.
+8. Update viewer navigation to group sidebar entries by feature folder and render ordered artifact tabs in the reader, with focused tree and reader tests; depends on task 7.
 
 ## Verification and Implementation Notes
 
@@ -206,3 +218,7 @@ Evidence: `node --test test/headings.test.js test/server.test.js test/viewer-rea
 Evidence: `npm test` passed 29 tests, `npm run package:check` produced a valid 0.4.2 package with 21 files, and `git diff --check` passed. A local server returned the reader landmark, `app.js`, and `headings.js` successfully. Browser-based folder selection could not be exercised because no computer-use browser was available in this environment; responsive and interaction contracts are covered by the focused automated tests above.
 
 Evidence: Version updated from 0.4.2 to 0.4.3 in package.json and package-lock.json. Final `npm test` passed 29 tests, `npm run package:check` validated the 0.4.3 package with 21 files, `git diff --check` passed, and `msdd review` passed. The final scoped diff and status were inspected before committing.
+
+Evidence: The desktop outline was refined after release into a floating sticky right rail based on the supplied reference. `node --check src/viewer/app.js && node --test test/viewer-reader.test.js test/viewer-style.test.js && git diff --check` passed 6 focused tests. The desktop rail keeps “On this page” continuously visible without a shadow; the compact mobile popover remains available at 700px and below.
+
+Evidence: The viewer navigation was reshaped to show one sidebar entry per feature folder and reader-local Explore, Spec, and Tasks tabs. `npm test` passed 31 tests and `git diff --check` passed after adding feature grouping and tab-order coverage.

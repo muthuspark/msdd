@@ -10,14 +10,40 @@ test('provides a labelled reader landmark before a document is selected', async 
   assert.match(html, /<article id="reader" aria-label="Document reader">/);
 });
 
-test('builds a labelled ARIA outline only when headings are available', async () => {
+test('builds a labelled desktop rail with a compact ARIA disclosure on small screens', async () => {
   const source = await fs.readFile(appUrl, 'utf8');
   assert.match(source, /if \(entries\.length\)/);
-  assert.match(source, /toggle\.setAttribute\('aria-expanded', 'false'\)/);
   assert.match(source, /toggle\.setAttribute\('aria-controls', panel\.id\)/);
   assert.match(source, /panel\.setAttribute\('aria-label', 'On this page'\)/);
+  assert.match(source, /layout\.append\(panel\)/);
+  assert.match(source, /toggle\.hidden = !compact; panel\.hidden = compact;/);
+  assert.match(source, /compactQuery\.addEventListener\('change', syncOutline/);
   assert.match(source, /event\.key === 'Escape'/);
   assert.match(source, /entry\.node\.focus\(\{ preventScroll: true \}\)/);
+});
+
+test('uses feature entries in the sidebar and exposes document artifacts as reader tabs', async () => {
+  const source = await fs.readFile(appUrl, 'utf8');
+  assert.match(source, /import \{ buildFeatures, defaultFile/);
+  assert.match(source, /button\.className = 'feature-button'/);
+  assert.match(source, /const artifactOrder = \['explore\.md', 'spec\.md', 'task\.md'\]/);
+  assert.match(source, /tabs\.className = 'reader-tabs'/);
+  assert.match(source, /\{ 'explore\.md': 'Explore', 'spec\.md': 'Spec', 'task\.md': 'Tasks' \}/);
+  assert.match(source, /selectFeature\(feature, button\)/);
+});
+
+test('uses a full-width title without a reader path line', async () => {
+  const source = await fs.readFile(appUrl, 'utf8');
+  assert.match(source, /context\.append\(title\); header\.append\(context\);/);
+  assert.doesNotMatch(source, /reader-path/);
+});
+
+test('keeps reader announcements concise and excludes the document H1 from the outline', async () => {
+  const [html, source] = await Promise.all([fs.readFile(indexUrl, 'utf8'), fs.readFile(appUrl, 'utf8')]);
+  assert.doesNotMatch(html, /<main class="app" aria-live=/);
+  assert.match(html, /id="reader-status" role="status"/);
+  assert.match(source, /headingEntries\(content\)\.filter\(\(entry\) => entry\.level > 1\)/);
+  assert.match(source, /link\.setAttribute\('aria-current', 'location'\)/);
 });
 
 test('retains recoverable document and diagram failure paths', async () => {

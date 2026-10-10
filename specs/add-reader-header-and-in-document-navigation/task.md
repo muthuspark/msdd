@@ -3,4 +3,7 @@
 - [x] T3: Update src/viewer/styles.css for sticky header, compact outline, heading nesting, mobile presentation, and reduced-motion behavior while preserving existing scrollports; depends on task 2.
 - [x] T4: Add or extend viewer tests for helper output, semantic and ARIA markup, sticky and responsive CSS, and error and heading-free behavior; depends on tasks 1-3.
 - [x] T5: Complete Run npm test, npm run package:check, and responsive or manual reader checks; resolve feature defects; depends on task 4
-- [x] T6: Complete As the final closing phase, update package.json and package-lock.json version as required, rerun release checks, inspect git status and diff, and create one git commit containing all and only the scoped feature, spec, test, and version changes; depends on task 5
+- [x] T6: Replace the desktop outline popover with a sticky right rail while retaining the compact mobile disclosure, and update focused reader/style tests; depends on task 5
+- [x] T7: Update viewer navigation to group sidebar entries by feature folder and render ordered artifact tabs in the reader, with focused tree and reader tests; depends on task 6.
+- [x] T8: Resolve reader audit findings for concise live announcements, clear keyboard focus, usable touch targets, tablet layout, document hierarchy, active outline state, and heading processing; depends on task 7.
+- [x] T9: Complete the final closing phase: update package.json and package-lock.json version, rerun release checks, inspect git status and diff, and create one git commit containing all scoped feature, spec, test, version, and audit artifacts; depends on task 8.

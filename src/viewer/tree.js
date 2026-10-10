@@ -8,6 +8,16 @@ export function buildTree(files) {
   const sort = (node) => ({ directories: [...node.directories].sort(([a], [b]) => a.localeCompare(b)).map(([name, child]) => ({ name, ...sort(child) })), files: node.files.sort((a, b) => a.relativePath.localeCompare(b)) });
   return sort(root);
 }
+export function buildFeatures(files) {
+  const groups = new Map();
+  for (const file of files.filter((item) => item.relativePath.endsWith('.md'))) {
+    const parts = file.relativePath.split('/').filter(Boolean);
+    const path = parts.slice(0, -1).join('/') || 'root';
+    if (!groups.has(path)) groups.set(path, { path, name: parts.at(-2) || parts[0], files: [] });
+    groups.get(path).files.push(file);
+  }
+  return [...groups.values()].map((group) => ({ ...group, files: group.files.sort((a, b) => a.relativePath.localeCompare(b)) })).sort((a, b) => a.path.localeCompare(b.path));
+}
 export function defaultFile(files) { return files.find((file) => file.relativePath.split('/').pop() === 'spec.md') || [...files].sort((a, b) => a.relativePath.localeCompare(b))[0]; }
 export async function filesFromDirectory(handle) {
   let specs; for await (const entry of handle.values()) if (entry.kind === 'directory' && entry.name === 'specs') specs = entry;

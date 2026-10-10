@@ -2,7 +2,7 @@
 <html lang="en">
   <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>MSDD Spec Viewer</title><link rel="stylesheet" href="/styles.css"></head>
   <body>
-    <main class="app" aria-live="polite">
+    <main class="app">
       <section class="landing" id="landing">
         <h1>MSDD Spec Viewer</h1>
         <button class="primary" id="choose-folder" type="button">Choose project folder</button>
@@ -15,6 +15,7 @@
         <article id="reader" aria-label="Document reader"><p class="empty">Choose a specification to read it.</p></article>
       </section>
       <p class="message" id="message" role="status"></p>
+      <p class="sr-only" id="reader-status" role="status"></p>
     </main>
     <script type="module" src="/app.js"></script>
   </body>
