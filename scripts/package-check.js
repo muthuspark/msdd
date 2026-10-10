@@ -14,7 +14,10 @@ const run = (command, args, options = {}) => {
 
 const required = [
   'package/LICENSE', 'package/README.md', 'package/package.json', 'package/bin/msdd.js',
-  'package/src/cli.js', 'package/src/core.js', 'package/shared-workflow.md',
+  'package/src/cli.js', 'package/src/core.js', 'package/src/server.js',
+  'package/src/viewer/index.html', 'package/src/viewer/styles.css', 'package/src/viewer/app.js',
+  'package/src/viewer/history.js', 'package/src/viewer/tree.js',
+  'package/shared-workflow.md',
   'package/skills/claude-sdd/SKILL.md', 'package/skills/codex-sdd/msdd-explore/SKILL.md',
   'package/skills/codex-sdd/msdd-spec/SKILL.md', 'package/skills/codex-sdd/msdd-build/SKILL.md'
 ];
@@ -37,6 +40,11 @@ try {
     for (const file of ['.codex/skills/msdd-explore/SKILL.md', '.codex/skills/msdd-spec/SKILL.md', '.codex/skills/msdd-build/SKILL.md', '.claude/skills/msdd/SKILL.md']) {
       await fs.access(path.join(smokeDir, file));
     }
+    for (const file of [
+      'node_modules/marked/lib/marked.esm.js',
+      'node_modules/dompurify/dist/purify.es.mjs',
+      'node_modules/mermaid/dist/mermaid.esm.mjs'
+    ]) await fs.access(path.join(smokeDir, file));
   } finally {
     await fs.rm(smokeDir, { recursive: true, force: true });
   }

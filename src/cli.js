@@ -4,6 +4,7 @@ import { createRequire } from 'node:module';
 import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
 import { SECTIONS, SECTION_FORMATS, featureDir, installSkills, parseTasks, reconcileTasks, reviewDesign, validateDesign, writeExploration, writeFeature } from './core.js';
+import { defaultBrowserOpener, startViewerServer } from './server.js';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
@@ -49,7 +50,7 @@ async function readAnswersFile(file) {
 
 function rootFrom(cwd) { return path.resolve(cwd || process.cwd()); }
 
-export async function main(args, cwd = process.cwd()) {
+export async function main(args, cwd = process.cwd(), { startServer = startViewerServer, openBrowser = defaultBrowserOpener } = {}) {
   const [command, feature, ...options] = args;
   const root = rootFrom(cwd);
   if (command === '--version' || command === '-v' || command === 'version') {
@@ -57,7 +58,7 @@ export async function main(args, cwd = process.cwd()) {
     return;
   }
   if (!command || command === 'help' || command === '--help') {
-    console.log('Usage: msdd <init|explore|spec|review|build> [<feature>] [options]');
+    console.log('Usage: msdd <init|explore|spec|review|build|serve> [<feature>] [options]');
     return;
   }
   if (command === 'init') {
@@ -74,6 +75,12 @@ export async function main(args, cwd = process.cwd()) {
       : await askExploration();
     console.log(`Exploration saved to ${path.relative(root, await writeExploration(root, feature, answers))}`);
     return;
+  }
+  if (command === 'serve') {
+    const viewer = await startServer();
+    console.log(`Spec viewer running at ${viewer.url}`);
+    try { openBrowser(viewer.url); } catch (error) { console.warn(`Could not open the default browser: ${error.message}\nOpen ${viewer.url} manually.`); }
+    return viewer;
   }
   if (!feature) throw new Error(`${command} requires a feature name`);
   const dir = featureDir(root, feature);
@@ -112,5 +119,5 @@ export async function main(args, cwd = process.cwd()) {
     console.log(`Implement only this task from spec.md, mark ${nextTask.id} as [x], then run build again.`);
     return;
   }
-  throw new Error(`Unknown command: ${command}; use init, explore, spec, or build`);
+  throw new Error(`Unknown command: ${command}; use init, explore, spec, review, build, or serve`);
 }

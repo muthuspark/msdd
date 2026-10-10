@@ -1,0 +1,8 @@
+- [x] T1: Add runtime dependencies and package-content configuration for local Markdown, sanitization, and Mermaid assets; update package checks to include the new viewer artifacts.
+- [x] T2: Implement and test the loopback static server, bounded sequential port fallback, safe asset allowlist, and injectable default-browser opener in `src/server.js`.
+- [x] T3: Complete Register and test `msdd serve` in `src/cli.js`, including help text, startup URL output, graceful opener warning, and process lifecycle
+- [x] T4: Build the static viewer shell and `DESIGN.md`-aligned styles for the minimal landing, sidebar tree, and reading pane.
+- [x] T5: Implement and test browser directory selection adapters, direct-`specs/` validation, recursive Markdown tree creation, deterministic default selection, and page-session-only state.
+- [x] T6: Implement and test sanitized Markdown rendering and locally served Mermaid rendering, including recoverable file, parser, and diagram failures.
+- [x] T8: Implement and test IndexedDB-backed recent-folder cards, permission revalidation, deduplication, six-item retention, and the non-persistent directory-upload fallback.
+- [ ] T9: Complete Run the full test suite and package check; manually verify selection, fallback port, default-browser URL, responsive reader, mockup-aligned UI, and recent-folder reuse, then record evidence

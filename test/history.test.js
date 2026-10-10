@@ -1,0 +1,2 @@
+import test from 'node:test'; import assert from 'node:assert/strict'; import { mergeRecent } from '../src/viewer/history.js';
+test('keeps six recent folders and moves a reused folder first', () => { const old = Array.from({ length: 6 }, (_, index) => ({ name: `folder-${index}` })); const merged = mergeRecent(old, { name: 'folder-3' }); assert.equal(merged.length, 6); assert.equal(merged[0].name, 'folder-3'); });

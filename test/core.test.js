@@ -140,3 +140,17 @@ test('explore creates only explore.md until spec is explicitly invoked', async (
   await assert.rejects(() => fs.access(path.join(featurePath, 'spec.md')));
   await assert.rejects(() => fs.access(path.join(featurePath, 'task.md')));
 });
+
+test('serve reports the actual URL and opens it after startup', async () => {
+  const messages = [];
+  const oldLog = console.log;
+  console.log = (message) => messages.push(message);
+  try {
+    const viewer = await main(['serve'], process.cwd(), {
+      startServer: async () => ({ url: 'http://127.0.0.1:5635', server: {} }),
+      openBrowser: (url) => messages.push(`opened ${url}`)
+    });
+    assert.equal(viewer.url, 'http://127.0.0.1:5635');
+  } finally { console.log = oldLog; }
+  assert.deepEqual(messages, ['Spec viewer running at http://127.0.0.1:5635', 'opened http://127.0.0.1:5635']);
+});
