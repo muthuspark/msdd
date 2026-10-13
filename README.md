@@ -2,6 +2,22 @@
 
 `msdd` is a Minimal markdown-first, specification-driven development skill for your coding agents. It keeps a feature’s exploration, detailed spec, and generated execution tasks together under `specs/<feature-slug>/`.
 
+## Local spec viewer
+
+Run `msdd serve` to open a local, browser-based reading room for your project specifications. Select a project folder, then browse rendered `explore.md`, `spec.md`, and `task.md` files with Mermaid diagrams and live refresh support.
+
+<p align="center">
+  <img src="public/Screenshot 2026-10-13 at 12.32.49 PM.png" alt="MSDD local specification viewer landing page" width="100%">
+</p>
+
+<p align="center"><em>Open a project folder and return to recently viewed specification work.</em></p>
+
+<p align="center">
+  <img src="public/Screenshot 2026-10-13 at 12.32.29 PM.png" alt="MSDD rendered specification reader with navigation and Mermaid diagram" width="100%">
+</p>
+
+<p align="center"><em>Read the full specification with artifact tabs, section navigation, and rendered diagrams.</em></p>
+
 ## Install
 
 Install or upgrade to the latest published version, then verify the active CLI:
