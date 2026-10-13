@@ -253,6 +253,7 @@ Upload descriptors retain their current one-time `File` behavior and use `mode: 
 - Evidence: T4 — added Live folder/Snapshot mode status and a manual Reload folder action for upload snapshots in the viewer shell, app, and styles. Added source-level assertions. Automated execution is pending because the environment has no Node runtime.
 - Evidence: T5 — added failure-path tests for transient scan errors and recovery, active-file fallback after refresh, continued refresh lifecycle behavior, and snapshot descriptors. Automated execution is pending because the environment has no Node runtime.
 - Evidence: T6 attempt — `npm test` and `npm run package:check` could not start because `npm` is not installed in the environment. `git diff --check` passed. Automated and manual browser verification remain pending until a Node/npm-enabled environment is available.
+- Evidence: Release review — CI found a path-key lookup bug in `compareFiles` and a stale source assertion for route history. Both are corrected for v0.4.14; CI is the verification authority because local Node/npm is unavailable.
 
 - Verify with `npm test` and `npm run package:check`.
 - Use a fixture project with `specs/feature/explore.md`, `spec.md`, and `task.md`; open `spec.md`, edit it externally, and confirm automatic update.

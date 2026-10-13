@@ -7,7 +7,7 @@ export function compareFiles(previous = [], next = []) {
   const after = new Map(next.map((file) => [file.relativePath, file]));
   const added = next.filter((file) => !before.has(file.relativePath));
   const removed = previous.filter((file) => !after.has(file.relativePath));
-  const changed = next.filter((file) => before.has(file.relativePath) && fileSignature(before.get(file)) !== fileSignature(file));
+  const changed = next.filter((file) => before.has(file.relativePath) && fileSignature(before.get(file.relativePath)) !== fileSignature(file));
   return { added, removed, changed, hasChanges: added.length > 0 || removed.length > 0 || changed.length > 0 };
 }
 
