@@ -44,7 +44,7 @@ test('reports transient scan failures and recovers on a later scan', async () =>
   controller.start([file('spec.md', 1)]); await Promise.resolve();
   assert.deepEqual(errors, ['temporary']);
   const interval = [...timers.values()][0]; await interval();
-  const timeout = [...timers.values()][0]; await timeout();
+  const timeout = [...timers.values()].at(-1); await timeout();
   assert.equal(updates.length, 1); assert.equal(updates[0].files[0].lastModified, 2);
   controller.stop();
 });

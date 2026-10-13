@@ -93,6 +93,6 @@ test('exposes live or snapshot state and a manual snapshot reload action', async
 test('keeps a deterministic fallback when a refreshed active file disappears', async () => {
   const source = await fs.readFile(appUrl, 'utf8');
   assert.match(source, /const file = match\?\.file \|\| preferred \|\| defaultFile\(first\.files\)/);
-  assert.match(source, /history\.replaceState\(\{\}, '', targetRoute\)/);
+  assert.match(source, /history\.replaceState\(\{\}, '', routeFor\(feature, file\)\)/);
   assert.match(source, /elements\.status\.textContent = readerState\?\.updated/);
 });
