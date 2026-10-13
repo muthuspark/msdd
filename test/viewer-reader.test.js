@@ -70,3 +70,29 @@ test('restores deep routes without pushing history and retains recovery context'
   assert.match(source, /navigationVersion/);
   assert.match(source, /await load\(files, remember \? null : route, remember \? 'push' : 'none'\)/);
 });
+
+test('starts live refresh for granted folders and preserves reader context during updates', async () => {
+  const source = await fs.readFile(appUrl, 'utf8');
+  assert.match(source, /import \{ createRefreshController \} from '\.\/refresh\.js'/);
+  assert.match(source, /scan: \(\) => filesFromDirectory\(handle\)/);
+  assert.match(source, /const scrollTop = elements\.reader\.scrollTop/);
+  assert.match(source, /preferredPath = activeFile\?\.relativePath/);
+  assert.match(source, /startRefresh\(handle, files\)/);
+  assert.match(source, /stopRefresh\(\); await load\(filesFromInput/);
+});
+
+test('exposes live or snapshot state and a manual snapshot reload action', async () => {
+  const [html, source, css] = await Promise.all([fs.readFile(indexUrl, 'utf8'), fs.readFile(appUrl, 'utf8'), fs.readFile(new URL('../src/viewer/styles.css', import.meta.url), 'utf8')]);
+  assert.match(html, /id="reader-mode"/);
+  assert.match(html, /id="reload-folder" type="button" hidden/);
+  assert.match(source, /elements\.mode\.textContent = live \? 'Live folder' : 'Snapshot'/);
+  assert.match(source, /elements\.reload\.addEventListener\('click', \(\) => elements\.input\.click\(\)\)/);
+  assert.match(css, /#reload-folder/);
+});
+
+test('keeps a deterministic fallback when a refreshed active file disappears', async () => {
+  const source = await fs.readFile(appUrl, 'utf8');
+  assert.match(source, /const file = match\?\.file \|\| preferred \|\| defaultFile\(first\.files\)/);
+  assert.match(source, /history\.replaceState\(\{\}, '', targetRoute\)/);
+  assert.match(source, /elements\.status\.textContent = readerState\?\.updated/);
+});

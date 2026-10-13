@@ -28,10 +28,10 @@ export function defaultFile(files) { return files.find((file) => file.relativePa
 export async function filesFromDirectory(handle) {
   let specs; for await (const entry of handle.values()) if (entry.kind === 'directory' && entry.name === 'specs') specs = entry;
   if (!specs) throw new Error('The selected folder must contain a direct specs directory.');
-  const files = []; async function walk(directory, prefix = '') { for await (const entry of directory.values()) { const next = `${prefix}${entry.name}`; if (entry.kind === 'directory') await walk(entry, `${next}/`); else if (entry.kind === 'file' && entry.name.endsWith('.md')) { const value = await entry.getFile(); files.push({ relativePath: next, lastModified: value.lastModified, readText: () => value.text() }); } } }
+  const files = []; async function walk(directory, prefix = '') { for await (const entry of directory.values()) { const next = `${prefix}${entry.name}`; if (entry.kind === 'directory') await walk(entry, `${next}/`); else if (entry.kind === 'file' && entry.name.endsWith('.md')) { const value = await entry.getFile(); files.push({ relativePath: next, lastModified: value.lastModified, size: value.size, handle: entry, mode: 'live', readText: async () => (await entry.getFile()).text() }); } } }
   await walk(specs); return files;
 }
 export function filesFromInput(files) {
-  const values = [...files].filter((file) => file.webkitRelativePath.split('/').slice(1, 2)[0] === 'specs' && file.name.endsWith('.md')).map((file) => ({ relativePath: file.webkitRelativePath.split('/').slice(2).join('/'), lastModified: file.lastModified, readText: () => file.text() }));
+  const values = [...files].filter((file) => file.webkitRelativePath.split('/').slice(1, 2)[0] === 'specs' && file.name.endsWith('.md')).map((file) => ({ relativePath: file.webkitRelativePath.split('/').slice(2).join('/'), lastModified: file.lastModified, size: file.size, mode: 'snapshot', readText: () => file.text() }));
   if (!values.length) throw new Error('The selected folder must contain a direct specs directory with Markdown files.'); return values;
 }

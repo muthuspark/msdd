@@ -1,0 +1,6 @@
+- [x] T1: Refactor directory-based Markdown descriptors in src/viewer/tree.js to retain File System Access handles, metadata, live readText, and explicit live/snapshot mode; add unit tests.
+- [x] T2: Add testable refresh comparison and lifecycle logic for one-second polling, 250 ms debounce, path/metadata changes, visibility pause/resume, and cleanup.
+- [x] T3: Integrate refresh lifecycle into src/viewer/app.js, including active-file reload, route/navigation race protection, reader-state preservation, deletion fallback, and status updates.
+- [x] T4: Add snapshot-mode manual reload and live/snapshot status affordances to src/viewer/index.html, src/viewer/app.js, and src/viewer/styles.css.
+- [x] T5: Add failure-path tests for permission loss, transient reads, deleted active files, continued write bursts, and upload snapshots.
+- [ ] T6: Run the complete test suite and package check; manually verify generated spec.md/task.md changes appear without browser refresh and record evidence.
