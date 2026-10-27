@@ -26,9 +26,9 @@ test('uses feature entries in the sidebar and exposes document artifacts as read
   const source = await fs.readFile(appUrl, 'utf8');
   assert.match(source, /import \{ buildFeatures, defaultFile/);
   assert.match(source, /button\.className = 'feature-button'/);
-  assert.match(source, /const artifactOrder = \['explore\.md', 'spec\.md', 'task\.md'\]/);
+  assert.match(source, /const artifactOrder = \['spec\.md', 'plan\.md', 'task\.md'\]/);
   assert.match(source, /tabs\.className = 'reader-tabs'/);
-  assert.match(source, /\{ 'explore\.md': 'Explore', 'spec\.md': 'Spec', 'task\.md': 'Tasks' \}/);
+  assert.match(source, /\{ 'spec\.md': 'Spec', 'plan\.md': 'Plan', 'task\.md': 'Tasks' \}/);
   assert.match(source, /selectFeature\(feature, button, undefined, 'push'\)/);
 });
 

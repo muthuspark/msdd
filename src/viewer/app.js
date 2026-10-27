@@ -51,9 +51,9 @@ function renderReader(file, html, feature) {
   const title = document.createElement('p'); title.className = 'reader-title'; title.textContent = featureLabel(feature);
   context.append(title); header.append(context);
   const tabs = document.createElement('nav'); tabs.className = 'reader-tabs'; tabs.setAttribute('aria-label', 'Specification documents');
-  const artifactOrder = ['explore.md', 'spec.md', 'task.md'];
+  const artifactOrder = ['spec.md', 'plan.md', 'task.md'];
   const artifacts = [...feature.files].sort((a, b) => { const aIndex = artifactOrder.indexOf(a.relativePath.split('/').pop()); const bIndex = artifactOrder.indexOf(b.relativePath.split('/').pop()); return (aIndex < 0 ? artifactOrder.length : aIndex) - (bIndex < 0 ? artifactOrder.length : bIndex) || a.relativePath.localeCompare(b.relativePath); });
-  for (const artifact of artifacts) { const tab = document.createElement('button'); tab.type = 'button'; tab.textContent = ({ 'explore.md': 'Explore', 'spec.md': 'Spec', 'task.md': 'Tasks' })[artifact.relativePath.split('/').pop()] || artifact.relativePath.split('/').pop().replace(/\.md$/, ''); if (artifact === file) tab.setAttribute('aria-current', 'page'); tab.addEventListener('click', () => selectFile(artifact, null, feature, 'push')); tabs.append(tab); }
+  for (const artifact of artifacts) { const tab = document.createElement('button'); tab.type = 'button'; tab.textContent = ({ 'spec.md': 'Spec', 'plan.md': 'Plan', 'task.md': 'Tasks' })[artifact.relativePath.split('/').pop()] || artifact.relativePath.split('/').pop().replace(/\.md$/, ''); if (artifact === file) tab.setAttribute('aria-current', 'page'); tab.addEventListener('click', () => selectFile(artifact, null, feature, 'push')); tabs.append(tab); }
   header.append(tabs);
   const layout = document.createElement('div'); layout.className = 'reader-layout'; layout.append(content);
   if (entries.length) {

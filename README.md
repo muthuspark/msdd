@@ -34,9 +34,9 @@ The `--force` option refreshes previously installed adapters.
 
 ## Detailed Guide
 
-### Local spec viewer
+### Local specification viewer
 
-Run `msdd serve` to open a local viewer. Select a project folder to browse rendered `explore.md`, `spec.md`, and `task.md` files with Mermaid diagrams and live refresh.
+Run `msdd serve` to open a local viewer. Select a project folder to browse rendered `spec.md`, `plan.md`, and `task.md` files with Mermaid diagrams and live refresh. Existing Markdown files in feature folders remain accessible.
 
 <p align="center">
   <img src="public/Screenshot 2026-10-13 at 12.32.49 PM.png" alt="MSDD local specification viewer landing page" width="100%">
@@ -52,11 +52,11 @@ Run `msdd serve` to open a local viewer. Select a project folder to browse rende
 
 ### Workflow
 
-The workflow has three modes:
+The workflow keeps the existing command names:
 
-1. `/msdd-explore` investigates the codebase and records options and open questions.
-2. `/msdd-spec` records confirmed decisions in a thirteen-section `spec.md` and generates `task.md`.
-3. `/msdd-build` implements the next unchecked task, verifies it, and continues until the spec is complete.
+1. `/msdd-explore` investigates the codebase and discusses options and open questions. It does not create an `explore.md` file.
+2. `/msdd-spec` creates `spec.md`, `plan.md`, and `task.md` together from confirmed decisions.
+3. `/msdd-build` implements the next unchecked plan task, verifies it against the spec's acceptance criteria, and continues until the plan is complete.
 
 Start each task with exploration, then review the generated spec and task list before building:
 
@@ -72,14 +72,14 @@ Review an existing spec with:
 msdd review "Feature name"
 ```
 
-The review reports unresolved sections, prose-only actionable sections, missing requirement or acceptance identifiers, and missing verification evidence.
+The review reports unresolved sections, prose-only actionable sections, missing requirement or acceptance identifiers, and missing verification evidence in the spec and plan.
 
 Feature artifacts are stored in `specs/<feature-slug>/`:
 
 ```text
-explore.md  # investigation and discussion
-spec.md     # approved source of truth
-task.md     # generated sequential execution view
+spec.md   # high-level design: intent, behavior, constraints, edge cases, acceptance criteria
+plan.md   # low-level design: components, interfaces, data flow, affected files, implementation steps
+task.md   # small, checkable agent steps derived from the plan
 ```
 
 ## License

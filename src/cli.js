@@ -3,24 +3,11 @@ import path from 'node:path';
 import { createRequire } from 'node:module';
 import readline from 'node:readline/promises';
 import { stdin as input, stdout as output } from 'node:process';
-import { SECTIONS, SECTION_FORMATS, featureDir, installSkills, parseTasks, reconcileTasks, reviewDesign, validateDesign, writeExploration, writeFeature } from './core.js';
+import { PLAN_SECTIONS, PLAN_SECTION_FORMATS, SPEC_SECTIONS, SPEC_SECTION_FORMATS, featureDir, hasCurrentSpecSchema, installSkills, parseTasks, reconcilePlanTasks, reconcileTasks, reviewDesign, reviewPlan, reviewPlanCoverage, reviewSpec, validateDesign, validatePlan, validateSpec, writeSpecAndPlan } from './core.js';
 import { defaultBrowserOpener, startViewerServer } from './server.js';
 
 const require = createRequire(import.meta.url);
 const { version } = require('../package.json');
-
-async function askInterview() {
-  const rl = readline.createInterface({ input, output });
-  const answers = {};
-  try {
-    for (const [title, prompt] of SECTIONS) {
-      output.write(`\n## ${title}\n${prompt}\nFormat: ${SECTION_FORMATS[title]}\n`);
-      answers[title] = await rl.question('Answer (use the requested labels, bullets, or numbered steps): ');
-      if (!answers[title].trim()) answers[title] = '_Not specified yet._';
-    }
-  } finally { rl.close(); }
-  return answers;
-}
 
 async function askExploration() {
   const rl = readline.createInterface({ input, output });
@@ -42,10 +29,34 @@ async function askExploration() {
   return answers;
 }
 
-async function readAnswersFile(file) {
-  const answers = JSON.parse(await fs.readFile(file, 'utf8'));
-  for (const [title] of SECTIONS) if (typeof answers[title] !== 'string') answers[title] = '_Not specified yet._';
+async function askSections(sections, formats, label) {
+  const rl = readline.createInterface({ input, output });
+  const answers = {};
+  try {
+    for (const [title, prompt] of sections) {
+      output.write(`\n## ${label}: ${title}\n${prompt}\nFormat: ${formats[title]}\n`);
+      answers[title] = await rl.question('Answer (use the requested labels, bullets, or numbered steps): ');
+      if (!answers[title].trim()) answers[title] = '_Not specified yet._';
+    }
+  } finally { rl.close(); }
   return answers;
+}
+
+async function askSpecAndPlan() {
+  output.write('\nHigh-level design: what to build and why.\n');
+  const spec = await askSections(SPEC_SECTIONS, SPEC_SECTION_FORMATS, 'Spec');
+  output.write('\nLow-level design: how to build it.\n');
+  const plan = await askSections(PLAN_SECTIONS, PLAN_SECTION_FORMATS, 'Plan');
+  return { spec, plan };
+}
+
+async function readSpecAndPlanAnswersFile(file) {
+  const answers = JSON.parse(await fs.readFile(file, 'utf8'));
+  const spec = answers.spec && typeof answers.spec === 'object' ? answers.spec : {};
+  const plan = answers.plan && typeof answers.plan === 'object' ? answers.plan : {};
+  for (const [title] of SPEC_SECTIONS) if (typeof spec[title] !== 'string') spec[title] = '_Not specified yet._';
+  for (const [title] of PLAN_SECTIONS) if (typeof plan[title] !== 'string') plan[title] = '_Not specified yet._';
+  return { spec, plan };
 }
 
 function rootFrom(cwd) { return path.resolve(cwd || process.cwd()); }
@@ -70,10 +81,12 @@ export async function main(args, cwd = process.cwd(), { startServer = startViewe
   if (command === 'explore') {
     if (!feature) throw new Error('explore requires a feature name');
     const answersPathIndex = options.indexOf('--answers-file');
-    const answers = answersPathIndex >= 0
-      ? JSON.parse(await fs.readFile(path.resolve(root, options[answersPathIndex + 1]), 'utf8'))
-      : await askExploration();
-    console.log(`Exploration saved to ${path.relative(root, await writeExploration(root, feature, answers))}`);
+    if (answersPathIndex >= 0) {
+      JSON.parse(await fs.readFile(path.resolve(root, options[answersPathIndex + 1]), 'utf8'));
+    } else {
+      await askExploration();
+    }
+    console.log(`Exploration complete for ${feature}; no file was created.`);
     return;
   }
   if (command === 'serve') {
@@ -86,29 +99,54 @@ export async function main(args, cwd = process.cwd(), { startServer = startViewe
   const dir = featureDir(root, feature);
   if (command === 'review') {
     const design = await fs.readFile(path.join(dir, 'spec.md'), 'utf8');
-    const findings = reviewDesign(design);
+    let findings;
+    if (hasCurrentSpecSchema(design)) {
+      findings = reviewSpec(design);
+      let plan = '';
+      try { plan = await fs.readFile(path.join(dir, 'plan.md'), 'utf8'); }
+      catch (error) { if (error.code !== 'ENOENT') throw error; }
+      if (!plan) findings.push({ severity: 'error', section: 'plan.md', message: 'Missing plan.md; run `msdd spec "<feature>"` to create the design artifacts' });
+      else findings.push(...reviewPlan(plan), ...reviewPlanCoverage(design, plan));
+    } else {
+      findings = reviewDesign(design);
+    }
     if (!findings.length) { console.log('Review passed: no structural or technical completeness gaps found.'); return; }
     for (const finding of findings) console.log(`${finding.severity.toUpperCase()} [${finding.section}]: ${finding.message}`);
     if (findings.some((finding) => finding.severity === 'error')) process.exitCode = 1;
     return;
   }
   if (command === 'spec') {
-    try { await fs.access(path.join(dir, 'explore.md')); } catch { throw new Error(`No exploration found for ${feature}; run \`msdd explore "${feature}"\` first`); }
     const answersPathIndex = options.indexOf('--answers-file');
     const answers = answersPathIndex >= 0
-      ? await readAnswersFile(path.resolve(root, options[answersPathIndex + 1]))
-      : await askInterview();
-    console.log(`Spec saved to ${path.relative(root, await writeFeature(root, feature, answers))}`);
+      ? await readSpecAndPlanAnswersFile(path.resolve(root, options[answersPathIndex + 1]))
+      : await askSpecAndPlan();
+    console.log(`Spec and plan saved to ${path.relative(root, await writeSpecAndPlan(root, feature, answers.spec, answers.plan))}`);
     return;
   }
   if (command === 'build') {
     const design = await fs.readFile(path.join(dir, 'spec.md'), 'utf8');
+    const currentFormat = hasCurrentSpecSchema(design);
     const taskPath = path.join(dir, 'task.md');
     let existing = '';
     try { existing = await fs.readFile(taskPath, 'utf8'); } catch (error) { if (error.code !== 'ENOENT') throw error; }
-    const errors = validateDesign(design);
-    if (errors.length) throw new Error(`Spec is invalid:\n${errors.map((error) => `- ${error}`).join('\n')}`);
-    const reconciled = reconcileTasks(design, existing);
+    let reconciled;
+    if (currentFormat) {
+      const planPath = path.join(dir, 'plan.md');
+      let plan;
+      try { plan = await fs.readFile(planPath, 'utf8'); }
+      catch (error) { if (error.code === 'ENOENT') throw new Error(`Plan is missing: ${path.relative(root, planPath)}; run \`msdd spec "${feature}"\` to create it`); throw error; }
+      const errors = [
+        ...validateSpec(design).map((error) => `spec.md: ${error}`),
+        ...validatePlan(plan).map((error) => `plan.md: ${error}`),
+        ...reviewPlanCoverage(design, plan).map((finding) => `plan.md: ${finding.message}`)
+      ];
+      if (errors.length) throw new Error(`Design is invalid:\n${errors.map((error) => `- ${error}`).join('\n')}`);
+      reconciled = reconcilePlanTasks(plan, existing);
+    } else {
+      const errors = validateDesign(design);
+      if (errors.length) throw new Error(`Spec is invalid:\n${errors.map((error) => `- ${error}`).join('\n')}`);
+      reconciled = reconcileTasks(design, existing);
+    }
     if (reconciled !== existing) await fs.writeFile(taskPath, reconciled);
     const nextTask = parseTasks(reconciled).find((task) => !task.checked);
     if (!nextTask) {
@@ -116,7 +154,9 @@ export async function main(args, cwd = process.cwd(), { startServer = startViewe
       return;
     }
     console.log(`Next task: [ ] ${nextTask.id}: ${nextTask.text}`);
-    console.log(`Implement only this task from spec.md, mark ${nextTask.id} as [x], then run build again.`);
+    console.log(currentFormat
+      ? `Implement this task from plan.md, use spec.md for expected behavior and acceptance criteria, mark ${nextTask.id} as [x], then run build again.`
+      : `Implement only this task from spec.md, mark ${nextTask.id} as [x], then run build again.`);
     return;
   }
   throw new Error(`Unknown command: ${command}; use init, explore, spec, review, build, or serve`);

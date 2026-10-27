@@ -1,0 +1,9 @@
+- [x] T1: Implement separate high-level spec and low-level plan models, renderers, parsers, and validators in src/core.js.
+- [x] T2: Implement paired spec.md and plan.md creation in the spec command without requiring explore.md.
+- [x] T3: Implement non-persistent exploration while retaining the explore command and interaction.
+- [x] T4: Implement task derivation and reconciliation from structured plan steps.
+- [x] T5: Update review and build for both new documents and legacy folders without plan.md.
+- [x] T6: Update the viewer to order and label Spec, Plan, and Tasks while keeping arbitrary Markdown support.
+- [x] T7: Update Codex and Claude skills and commands for the revised workflow.
+- [x] T8: Update README.md and shared-workflow.md for the revised artifact roles.
+- [x] T9: Add focused tests for generation, task handling, viewer behavior, commands, and legacy compatibility.

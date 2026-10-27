@@ -35,6 +35,47 @@ export const SECTION_FORMATS = {
   'Verification and Implementation Notes': 'List commands/tests, expected evidence, rollout checks, and a place to record deviations.'
 };
 
+// The current artifact model separates user-facing design from implementation
+// design. SECTIONS above remains the legacy spec schema for existing folders.
+export const SPEC_SECTIONS = [
+  ['Summary', 'What outcome does the feature deliver, and why?'],
+  ['Problem', 'What user problem or opportunity does it address?'],
+  ['Goals and Non-Goals', 'What outcomes are in scope and out of scope?'],
+  ['Users and Scenarios', 'Who uses this feature and what do they need to do?'],
+  ['Requirements', 'What observable behavior must the feature provide?'],
+  ['User/System Flows', 'What steps and outcomes do users experience?'],
+  ['Decisions and Constraints', 'What product decisions, assumptions, and constraints shape the behavior?'],
+  ['Edge Cases and Failure Handling', 'What edge cases and user-visible failures must be handled?'],
+  ['Acceptance Criteria', 'What observable outcomes prove the feature is complete?'],
+  ['Explanation and Output Artifacts', 'What user-facing explanation or supporting artifacts are needed?']
+];
+
+export const SPEC_SECTION_FORMATS = Object.fromEntries(SPEC_SECTIONS.map(([title]) => [title,
+  SECTION_FORMATS[title] || 'Use concise, observable statements. Keep implementation details in plan.md.'
+]));
+
+export const PLAN_SECTIONS = [
+  ['Technical Design', 'Describe the low-level design and implementation decisions.'],
+  ['Components and Interfaces', 'List components, responsibilities, interfaces, and contracts.'],
+  ['Data Flow', 'Describe how data moves through the implementation.'],
+  ['Decisions and Constraints', 'Record technical decisions, assumptions, constraints, trade-offs, and open questions.'],
+  ['File Changes', 'List affected files or boundaries and the intended changes.'],
+  ['Failure Handling', 'Describe implementation failure paths and recovery behavior.'],
+  ['Implementation Steps', 'List ordered, independently checkable implementation steps.'],
+  ['Verification Steps', 'List checks that verify the plan and cover spec acceptance criteria.']
+];
+
+export const PLAN_SECTION_FORMATS = {
+  'Technical Design': 'Include a concise solution description and change-relevant architecture or sequence diagram when useful.',
+  'Components and Interfaces': 'Use bullets. State each component responsibility and its inputs/outputs or interface contract.',
+  'Data Flow': 'Use ordered steps or a diagram to show data transformations and boundaries.',
+  'Decisions and Constraints': 'Use `### Confirmed Decisions`, `### Assumptions`, `### Constraints`, `### Trade-offs`, and `### Open Questions`, each followed by bullets.',
+  'File Changes': 'Use bullets. Name each affected file or boundary and the intended change.',
+  'Failure Handling': 'Use bullets or a table with trigger, implementation response, and recovery.',
+  'Implementation Steps': 'Use ordered, small, independently checkable steps. Include dependencies when relevant.',
+  'Verification Steps': 'Use ordered or bulleted checks. Reference spec acceptance IDs where applicable.'
+};
+
 export const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 export function slugify(name) {
@@ -53,6 +94,19 @@ export function renderDesign(name, answers) {
   return `# ${name.trim()}\n\n${body}\n`;
 }
 
+function renderSections(name, sections, formats, answers, label) {
+  const body = sections.map(([title]) => `## ${title}\n\n<!-- Format: ${formats[title]} -->\n\n${answers[title]?.trim() || '_Not specified yet._'}`).join('\n\n');
+  return `# ${name.trim()} — ${label}\n\n${body}\n`;
+}
+
+export function renderSpec(name, answers) {
+  return renderSections(name, SPEC_SECTIONS, SPEC_SECTION_FORMATS, answers, 'Spec');
+}
+
+export function renderPlan(name, answers) {
+  return renderSections(name, PLAN_SECTIONS, PLAN_SECTION_FORMATS, answers, 'Plan');
+}
+
 export function renderExploration(name, answers) {
   return `# Exploration: ${name.trim()}\n\n## Context\n\n${answers.context?.trim() || '_Not specified yet._'}\n\n## Codebase Analysis\n\n${answers.analysis?.trim() || '_Not investigated yet._'}\n\n## Recommendations\n\n${answers.recommendations?.trim() || '_No recommendations yet._'}\n\n## Open Questions\n\n${answers.questions?.trim() || '_No open questions yet._'}\n\n## Decisions Confirmed\n\n${answers.decisions?.trim() || '_No decisions confirmed yet._'}\n`;
 }
@@ -68,6 +122,106 @@ export function parseDesign(markdown) {
     sections.set(title, markdown.slice(start, end).replace(/<!--[\s\S]*?-->/g, '').trim());
   }
   return { heading, sections };
+}
+
+export const parseSpec = parseDesign;
+export const parsePlan = parseDesign;
+
+function validateSections(markdown, expectedSections, review) {
+  const errors = [];
+  const parsed = parseDesign(markdown);
+  if (!parsed.heading) errors.push('Missing level-one document heading');
+  for (const [title] of expectedSections) {
+    if (!parsed.sections.has(title)) errors.push(`Missing section: ${title}`);
+    else if (!parsed.sections.get(title).trim()) errors.push(`Empty section: ${title}`);
+  }
+  for (const title of parsed.sections.keys()) {
+    if (!expectedSections.some(([expected]) => expected === title)) errors.push(`Unexpected section: ${title}`);
+  }
+  errors.push(...review(markdown).filter((finding) => finding.severity === 'error').map((finding) => finding.message));
+  return [...new Set(errors)];
+}
+
+export function validateSpec(markdown) {
+  return validateSections(markdown, SPEC_SECTIONS, reviewSpec);
+}
+
+export function validatePlan(markdown) {
+  return validateSections(markdown, PLAN_SECTIONS, reviewPlan);
+}
+
+export function hasCurrentSpecSchema(markdown) {
+  const { sections } = parseSpec(markdown);
+  return SPEC_SECTIONS.every(([title]) => sections.has(title)) &&
+    [...sections.keys()].every((title) => SPEC_SECTIONS.some(([expected]) => expected === title));
+}
+
+export function reviewPlanCoverage(specMarkdown, planMarkdown) {
+  const findings = [];
+  const specSections = parseSpec(specMarkdown).sections;
+  const acceptance = specSections.get('Acceptance Criteria') || '';
+  const verification = parsePlan(planMarkdown).sections.get('Verification Steps') || '';
+  const ids = [...new Set(acceptance.match(/\bAC-\d+\b/gi) || [])];
+  for (const id of ids) {
+    if (!new RegExp(`\\b${id}\\b`, 'i').test(verification)) {
+      findings.push({ severity: 'error', section: 'Verification Steps', message: `${id} is not covered by a plan verification step` });
+    }
+  }
+  return findings;
+}
+
+export function reviewSpec(markdown) {
+  const findings = [];
+  const parsed = parseDesign(markdown);
+  const placeholder = /^(?:_not specified yet\.?_|tbd|todo|to be decided|n\/a)$/i;
+  for (const [title] of SPEC_SECTIONS) {
+    if (!parsed.sections.has(title)) findings.push({ severity: 'error', section: title, message: `Missing section: ${title}` });
+    else if (!parsed.sections.get(title).trim()) findings.push({ severity: 'error', section: title, message: `Empty section: ${title}` });
+  }
+  for (const title of parsed.sections.keys()) if (!SPEC_SECTIONS.some(([expected]) => expected === title)) {
+    findings.push({ severity: 'error', section: title, message: `Unexpected section: ${title}` });
+  }
+  for (const [title, text] of parsed.sections) {
+    if (placeholder.test(text.trim())) findings.push({ severity: 'error', section: title, message: `Section is unresolved: ${title}` });
+  }
+  for (const title of ['Goals and Non-Goals', 'Users and Scenarios', 'Requirements', 'User/System Flows', 'Decisions and Constraints', 'Edge Cases and Failure Handling', 'Acceptance Criteria']) {
+    const text = parsed.sections.get(title) || '';
+    if (text && !/^\s*(?:[-*+] |\d+[.)] |#{3,4} |[A-Z][A-Za-z /-]+:)/m.test(text)) {
+      findings.push({ severity: 'error', section: title, message: `${title} must use bullets, numbered steps, subheadings, or labeled fields` });
+    }
+  }
+  if (!/\bREQ-\d+\b/i.test(parsed.sections.get('Requirements') || '')) findings.push({ severity: 'warning', section: 'Requirements', message: 'Requirements have no stable REQ-* identifiers' });
+  if (!/\bAC-\d+\b/i.test(parsed.sections.get('Acceptance Criteria') || '')) findings.push({ severity: 'warning', section: 'Acceptance Criteria', message: 'Acceptance criteria have no stable AC-* identifiers' });
+  return findings;
+}
+
+export function reviewPlan(markdown) {
+  const findings = [];
+  const parsed = parseDesign(markdown);
+  const placeholder = /^(?:_not specified yet\.?_|tbd|todo|to be decided|n\/a)$/i;
+  for (const [title] of PLAN_SECTIONS) {
+    if (!parsed.sections.has(title)) findings.push({ severity: 'error', section: title, message: `Missing section: ${title}` });
+    else if (!parsed.sections.get(title).trim()) findings.push({ severity: 'error', section: title, message: `Empty section: ${title}` });
+  }
+  for (const title of parsed.sections.keys()) if (!PLAN_SECTIONS.some(([expected]) => expected === title)) {
+    findings.push({ severity: 'error', section: title, message: `Unexpected section: ${title}` });
+  }
+  for (const [title, text] of parsed.sections) {
+    if (placeholder.test(text.trim())) findings.push({ severity: 'error', section: title, message: `Section is unresolved: ${title}` });
+  }
+  for (const title of ['Components and Interfaces', 'Data Flow', 'File Changes', 'Failure Handling', 'Implementation Steps', 'Verification Steps']) {
+    const text = parsed.sections.get(title) || '';
+    if (text && !/^\s*(?:[-*+] |\d+[.)] |#{3,4} |[A-Z][A-Za-z /-]+:)/m.test(text)) {
+      findings.push({ severity: 'error', section: title, message: `${title} must use bullets, numbered steps, subheadings, or labeled fields` });
+    }
+  }
+  if (!(parsed.sections.get('Implementation Steps') || '').match(/(?:^|\n)\s*(?:[-*+] |\d+[.)] )/)) {
+    findings.push({ severity: 'error', section: 'Implementation Steps', message: 'Implementation Steps must contain ordered or bulleted executable tasks' });
+  }
+  if (!(parsed.sections.get('Verification Steps') || '').match(/(?:test|verify|check|command|expected|evidence|AC-\d+)/i)) {
+    findings.push({ severity: 'warning', section: 'Verification Steps', message: 'Verification Steps do not identify checks or acceptance criteria' });
+  }
+  return findings;
 }
 
 function cleanLine(line) {
@@ -88,7 +242,8 @@ function taskText(section, statement) {
   const verbs = {
     'Requirements': 'Implement', 'User/System Flows': 'Implement the flow:', 'Technical Design': 'Implement',
     'Decisions and Constraints': 'Apply', 'Edge Cases and Failure Handling': 'Handle',
-    'Acceptance Criteria': 'Verify', 'Implementation Plan': 'Complete', 'Verification and Implementation Notes': 'Verify'
+    'Acceptance Criteria': 'Verify', 'Implementation Plan': 'Complete', 'Verification and Implementation Notes': 'Verify',
+    'Verification Steps': 'Verify'
   };
   return `${verbs[section] || 'Address'} ${normalized.replace(/[.]+$/, '')}`;
 }
@@ -111,6 +266,22 @@ export function deriveTasks(designMarkdown) {
   return tasks;
 }
 
+export function derivePlanTasks(planMarkdown) {
+  const { sections } = parsePlan(planMarkdown);
+  const tasks = [];
+  const seen = new Set();
+  for (const section of ['Implementation Steps', 'Verification Steps']) {
+    for (const statement of sentenceTasks(sections.get(section) || '')) {
+      const text = taskText(section, statement).replace(/\s+/g, ' ').trim();
+      const key = text.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      tasks.push({ text });
+    }
+  }
+  return tasks;
+}
+
 export function parseTasks(markdown) {
   return [...markdown.matchAll(/^[-*] \[([ xX])\] (T\d+): (.+)$/gm)].map((match) => ({
     id: match[2], checked: match[1].toLowerCase() === 'x', text: match[3].trim()
@@ -125,6 +296,21 @@ function nextId(used) {
 
 export function reconcileTasks(designMarkdown, existingMarkdown = '') {
   const desired = deriveTasks(designMarkdown);
+  const old = parseTasks(existingMarkdown);
+  const oldByText = new Map(old.map((task) => [task.text.toLowerCase().replace(/\s+/g, ' '), task]));
+  const used = new Set(old.map((task) => task.id));
+  const result = desired.map(({ text }) => {
+    const previous = oldByText.get(text.toLowerCase().replace(/\s+/g, ' '));
+    if (previous) return { ...previous, text };
+    const id = nextId(used);
+    used.add(id);
+    return { id, checked: false, text };
+  });
+  return `${result.map((task) => `- [${task.checked ? 'x' : ' '}] ${task.id}: ${task.text}`).join('\n')}\n`;
+}
+
+export function reconcilePlanTasks(planMarkdown, existingMarkdown = '') {
+  const desired = derivePlanTasks(planMarkdown);
   const old = parseTasks(existingMarkdown);
   const oldByText = new Map(old.map((task) => [task.text.toLowerCase().replace(/\s+/g, ' '), task]));
   const used = new Set(old.map((task) => task.id));
@@ -215,6 +401,36 @@ export async function writeFeature(root, name, answers) {
   const design = renderDesign(name, answers);
   await fs.writeFile(path.join(dir, 'spec.md'), design);
   await fs.writeFile(path.join(dir, 'task.md'), reconcileTasks(design));
+  return dir;
+}
+
+export async function writeSpecAndPlan(root, name, specAnswers, planAnswers) {
+  const dir = featureDir(root, name);
+  const specPath = path.join(dir, 'spec.md');
+  const planPath = path.join(dir, 'plan.md');
+  const taskPath = path.join(dir, 'task.md');
+  for (const destination of [specPath, planPath]) {
+    try {
+      await fs.access(destination);
+      throw new Error(`Artifact already exists: ${path.relative(root, destination)}`);
+    } catch (error) { if (error.code !== 'ENOENT') throw error; }
+  }
+  await fs.mkdir(dir, { recursive: true });
+  const created = [];
+  try {
+    await fs.writeFile(specPath, renderSpec(name, specAnswers), { flag: 'wx' });
+    created.push(specPath);
+    const plan = renderPlan(name, planAnswers);
+    await fs.writeFile(planPath, plan, { flag: 'wx' });
+    created.push(planPath);
+    try {
+      await fs.writeFile(taskPath, reconcilePlanTasks(plan), { flag: 'wx' });
+      created.push(taskPath);
+    } catch (error) { if (error.code !== 'EEXIST') throw error; }
+  } catch (error) {
+    await Promise.all(created.map((file) => fs.rm(file, { force: true })));
+    throw error;
+  }
   return dir;
 }
 
