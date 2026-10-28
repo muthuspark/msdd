@@ -30,22 +30,35 @@ test('allows only known static routes', async () => {
   server.listen(0, '127.0.0.1');
   await once(server, 'listening');
   const { port } = server.address();
-  const response = await fetch(`http://127.0.0.1:${port}/../../package.json`);
+  const request = async (url, options = {}) => {
+    const response = await fetch(url, { ...options, headers: { ...options.headers, connection: 'close' } });
+    const body = await response.text();
+    return { status: response.status, text: async () => body };
+  };
+  const response = await request(`http://127.0.0.1:${port}/../../package.json`);
   assert.equal(response.status, 404);
-  const homepage = await fetch(`http://127.0.0.1:${port}/`);
+  const homepage = await request(`http://127.0.0.1:${port}/`);
   assert.equal(homepage.status, 200);
   assert.match(await homepage.text(), /Open project folder/);
-  const documentRoute = await fetch(`http://127.0.0.1:${port}/specs/reader/reader%2Fspec.md`);
+  const documentRoute = await request(`http://127.0.0.1:${port}/specs/reader/reader%2Fspec.md`);
   assert.equal(documentRoute.status, 200);
   assert.match(await documentRoute.text(), /Open project folder/);
-  assert.equal((await fetch(`http://127.0.0.1:${port}/specs/reader/reader%2Fnotes.txt`)).status, 404);
-  assert.equal((await fetch(`http://127.0.0.1:${port}/specs/reader/reader%2Fspec.md`, { method: 'POST' })).status, 404);
-  assert.equal((await fetch(`http://127.0.0.1:${port}/headings.js`)).status, 200);
-  assert.equal((await fetch(`http://127.0.0.1:${port}/routes.js`)).status, 200);
-  assert.equal((await fetch(`http://127.0.0.1:${port}/tree.js`)).status, 200);
+  assert.equal((await request(`http://127.0.0.1:${port}/specs/reader/reader%2Fnotes.txt`)).status, 404);
+  assert.equal((await request(`http://127.0.0.1:${port}/specs/reader/reader%2Fspec.md`, { method: 'POST' })).status, 404);
+  assert.equal((await request(`http://127.0.0.1:${port}/headings.js`)).status, 200);
+  assert.equal((await request(`http://127.0.0.1:${port}/routes.js`)).status, 200);
+  assert.equal((await request(`http://127.0.0.1:${port}/tree.js`)).status, 200);
   await new Promise((resolve) => server.close(resolve));
 });
 
 test('uses platform browser opener commands without a shell', () => {
-  assert.doesNotThrow(() => { const child = defaultBrowserOpener('http://127.0.0.1:1', 'linux'); child.kill(); });
+  let call;
+  let unrefed = false;
+  const child = defaultBrowserOpener('http://127.0.0.1:1', 'linux', (...args) => {
+    call = args;
+    return { unref: () => { unrefed = true; } };
+  });
+  assert.deepEqual(call, ['xdg-open', ['http://127.0.0.1:1'], { detached: true, stdio: 'ignore' }]);
+  assert.equal(unrefed, true);
+  assert.equal(typeof child.unref, 'function');
 });
