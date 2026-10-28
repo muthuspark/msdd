@@ -8,6 +8,8 @@ It also includes a local Markdown viewer for reading and reviewing generated spe
 
 ## Quick Overview
 
+Requires Node.js 22.12.0 or newer.
+
 1. Install `msdd`:
 
 ```sh
