@@ -27,6 +27,7 @@ export function viewerRoutes(root = sourceRoot) {
     ['/tree.js', path.join(root, 'viewer', 'tree.js')],
     ['/history.js', path.join(root, 'viewer', 'history.js')],
     ['/routes.js', path.join(root, 'viewer', 'routes.js')],
+    ['/refresh.js', path.join(root, 'viewer', 'refresh.js')],
     ['/styles.css', path.join(root, 'viewer', 'styles.css')],
     ['/vendor/marked.js', path.join(root, '..', 'node_modules', 'marked', 'lib', 'marked.esm.js')],
     ['/vendor/purify.js', path.join(root, '..', 'node_modules', 'dompurify', 'dist', 'purify.es.mjs')],

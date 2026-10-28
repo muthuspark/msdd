@@ -48,6 +48,13 @@ test('allows only known static routes', async () => {
   assert.equal((await request(`http://127.0.0.1:${port}/headings.js`)).status, 200);
   assert.equal((await request(`http://127.0.0.1:${port}/routes.js`)).status, 200);
   assert.equal((await request(`http://127.0.0.1:${port}/tree.js`)).status, 200);
+  const app = await request(`http://127.0.0.1:${port}/app.js`);
+  for (const [, modulePath] of (await app.text()).matchAll(/from\s+['"](\.\/[^'"]+)['"]/g)) {
+    const module = await fetch(new URL(modulePath, `http://127.0.0.1:${port}/app.js`));
+    assert.equal(module.status, 200, `App dependency ${modulePath} must be served`);
+    assert.match(module.headers.get('content-type'), /text\/javascript/);
+    await module.text();
+  }
   await new Promise((resolve) => server.close(resolve));
 });
 
